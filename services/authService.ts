@@ -141,18 +141,18 @@ export const authService = {
 
   // Referral handling via Firebase Firestore
   applyReferral: async (newUsername: string, refCode: string): Promise<boolean> => {
-    const referrerUsername = refCode.replace('VOLERA-', '').trim();
+    let referrerUsername = refCode.trim();
+    if (referrerUsername.toUpperCase().startsWith('VOLERA-')) {
+      referrerUsername = referrerUsername.substring(7).trim();
+    }
     if (!referrerUsername) return false;
 
     try {
-      // Find the referrer by username in Firestore
-      const usersCol = collection(db, 'users');
-      const q = query(usersCol, where('username', '==', referrerUsername));
-      const querySnapshot = await getDocs(q);
+      // Find the referrer by username in Firestore case-insensitively
+      const usersList = await authService.getUsers();
+      const referrerData = usersList.find(u => u.username && u.username.toLowerCase() === referrerUsername.toLowerCase());
 
-      if (!querySnapshot.empty) {
-        const referrerDoc = querySnapshot.docs[0];
-        const referrerData = referrerDoc.data();
+      if (referrerData && referrerData.email) {
         const referrals = referrerData.referrals || [];
 
         if (!referrals.includes(newUsername)) {
@@ -160,7 +160,8 @@ export const authService = {
           const updatedBalance = (referrerData.balance || 0) + 10000;
 
           // Update referrer in Firestore
-          await setDoc(referrerDoc.ref, {
+          const referrerDocRef = doc(db, 'users', referrerData.email.toLowerCase());
+          await setDoc(referrerDocRef, {
             referrals: updatedReferrals,
             balance: updatedBalance
           }, { merge: true });

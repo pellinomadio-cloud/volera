@@ -29,7 +29,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
       if (ref) {
         setFormData(prev => ({
           ...prev,
-          referralCode: ref.toUpperCase()
+          referralCode: ref.trim()
         }));
       }
     } catch (e) {
