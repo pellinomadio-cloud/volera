@@ -22,6 +22,21 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  React.useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref) {
+        setFormData(prev => ({
+          ...prev,
+          referralCode: ref.toUpperCase()
+        }));
+      }
+    } catch (e) {
+      console.error("Error parsing referral code from URL:", e);
+    }
+  }, []);
+
   const handleAction = async () => {
     setError('');
     setSuccessMsg('');
@@ -271,22 +286,38 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                   />
                 </div>
 
-                <label className="flex items-center gap-2.5 cursor-pointer group py-1">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={formData.agreeTerms}
-                      onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
-                    />
-                    <div className={`w-4 h-4 rounded border transition-all flex items-center justify-center ${formData.agreeTerms ? 'bg-amber-400 border-amber-400' : 'border-white/20 group-hover:border-amber-400/40'}`}>
-                      {formData.agreeTerms && <ShieldCheck size={11} className="text-black stroke-[3]" />}
+                <div className="relative">
+                  <label className="flex items-center gap-2.5 cursor-pointer group py-1 pl-5">
+                    {/* Bouncing Pointer Arrow */}
+                    {!formData.agreeTerms && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1, x: [-3, 1, -3] }}
+                        transition={{
+                          opacity: { duration: 0.3 },
+                          x: { repeat: Infinity, duration: 1, ease: "easeInOut" }
+                        }}
+                        className="absolute left-0 text-amber-400 flex items-center justify-center"
+                      >
+                        <ArrowRight size={12} className="stroke-[3.5]" />
+                      </motion.div>
+                    )}
+                    <div className="relative flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={formData.agreeTerms}
+                        onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
+                      />
+                      <div className={`w-4 h-4 rounded border transition-all flex items-center justify-center ${formData.agreeTerms ? 'bg-amber-400 border-amber-400' : 'border-white/20 group-hover:border-amber-400/40'}`}>
+                        {formData.agreeTerms && <ShieldCheck size={11} className="text-black stroke-[3]" />}
+                      </div>
                     </div>
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                    I accept the terms of the node agreement
-                  </span>
-                </label>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                      I accept the terms of the node agreement
+                    </span>
+                  </label>
+                </div>
               </div>
             </motion.div>
           )}

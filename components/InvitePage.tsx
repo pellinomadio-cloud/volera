@@ -31,7 +31,7 @@ const InvitePage: React.FC<InvitePageProps> = ({ onBack, onRewardClaimed }) => {
 
   const username = currentUser?.username || "user";
   const refCode = `VOLERA-${username.toUpperCase()}`;
-  const inviteLink = `https://volerapay.ng/register?ref=${refCode}`;
+  const inviteLink = `https://volerapay.com/register?ref=${refCode}`;
   const shareMessage = encodeURIComponent(`Hi! Join Volerapay, the premium digital ledger system with 0-fee withdrawals. Register now using my referral code ${refCode} to start checking your secure node: ${inviteLink}`);
 
   const handleShare = () => {
