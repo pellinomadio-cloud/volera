@@ -288,7 +288,7 @@ const App: React.FC = () => {
   if (isWithdrawLoading) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-        <Loader2 size={48} className="text-[#00A3FF] animate-spin mb-6" />
+        <Loader2 size={48} className="text-amber-400 animate-spin mb-6" />
         <h2 className="text-xl font-black italic tracking-widest text-amber-400 mb-2">SECURE TUNNELING</h2>
         <p className="text-[10px] text-gray-500 uppercase tracking-widest animate-pulse">Verifying CBN Node...</p>
       </div>
@@ -301,12 +301,16 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-black text-white flex flex-col max-w-md mx-auto relative shadow-2xl overflow-x-hidden border-x border-white/5">
       {/* Header - Compact */}
       <header className="px-6 py-4 flex justify-between items-center bg-black/90 backdrop-blur-md sticky top-0 z-[60] border-b border-white/5">
-        <button className="p-1.5 hover:bg-white/5 rounded-xl transition-colors">
+        <button 
+          onClick={() => window.open('https://t.me/novapay999', '_blank')}
+          className="p-1.5 hover:bg-white/5 rounded-xl transition-colors"
+          title="Telegram Support"
+        >
           <Menu size={18} className="text-gray-400" />
         </button>
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse"></span>
-          <h1 className="text-xs font-black tracking-[0.4em] text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200 italic uppercase">VOLERAPAY</h1>
+          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+          <h1 className="text-xs font-black tracking-[0.4em] text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-blue-400 to-yellow-200 italic uppercase">VOLERAPAY</h1>
         </div>
         <div className="relative">
           <button 
@@ -480,7 +484,6 @@ const App: React.FC = () => {
         <BottomNav 
           currentView={currentView} 
           onViewChange={setCurrentView} 
-          onAIAssistant={() => setIsAIChatOpen(true)}
         />
       )}
 

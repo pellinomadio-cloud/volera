@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface BalanceCardProps {
   balance: number;
@@ -14,45 +15,76 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, target, currency, on
   const progress = (balance / target) * 100;
 
   return (
-    <div className="w-full blue-gradient rounded-[2rem] p-5 shadow-2xl relative overflow-hidden mb-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full bg-gradient-to-br from-[#0B1530] via-[#050C1D] to-[#201602] rounded-[2.2rem] p-6 shadow-2xl relative overflow-hidden mb-6 border border-amber-500/15"
+    >
+      {/* Golden Glowing Ambient Dust */}
+      <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-[40px] pointer-events-none animate-pulse"></div>
+      <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-blue-500/10 rounded-full blur-[45px] pointer-events-none"></div>
+
+      {/* Decorative Gold Laser Lines */}
+      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent"></div>
+
       <div className="relative z-10">
-        <div className="flex justify-between items-center mb-6">
-          <div className="space-y-1">
-            <p className="text-white/80 text-[10px] font-medium tracking-tight">Available Balance</p>
-            <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold text-white tracking-tight">
+        <div className="flex justify-between items-start mb-6">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-amber-400/80">
+              <ShieldCheck size={12} className="stroke-[2.5]" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Verified Ledger Node</span>
+              <Sparkles size={10} className="animate-spin text-amber-400" style={{ animationDuration: '6s' }} />
+            </div>
+            
+            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Available Balance</p>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-100 to-amber-200 tracking-tight leading-none">
                 {showBalance ? `${currency}${balance.toLocaleString()}` : '•••••••'}
               </h2>
               <button 
                 onClick={() => setShowBalance(!showBalance)}
-                className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                className="p-1.5 hover:bg-white/5 text-amber-400 rounded-lg transition-colors"
+                title={showBalance ? "Hide Balance" : "Show Balance"}
               >
-                {showBalance ? <Eye size={16} className="text-white/60" /> : <EyeOff size={16} className="text-white/60" />}
+                {showBalance ? <Eye size={15} /> : <EyeOff size={15} />}
               </button>
             </div>
           </div>
-          <button 
+
+          <motion.button 
+            whileHover={{ scale: 1.03, boxShadow: '0 0 20px rgba(245,158,11,0.2)' }}
+            whileTap={{ scale: 0.97 }}
             onClick={onWithdraw}
-            className="bg-white text-[#0066FF] px-6 py-1.5 rounded-full font-bold text-[12px] shadow-lg hover:bg-opacity-90 transition-all active:scale-95"
+            className="bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-300 text-black px-6 py-2 rounded-xl font-black text-[11px] uppercase tracking-wider shadow-lg hover:brightness-110 transition-all border border-amber-300/30"
           >
             Withdraw
-          </button>
+          </motion.button>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex justify-between items-end">
-            <span className="text-white/80 text-[10px] font-medium">Daily target</span>
-            <span className="text-white/90 text-[10px] font-bold">{currency}{target.toLocaleString()}</span>
+        {/* Dynamic target tracking and golden progress bar */}
+        <div className="space-y-2.5 pt-4 border-t border-white/5">
+          <div className="flex justify-between items-center text-[10px]">
+            <span className="text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1">
+              <TrendingUp size={12} className="text-amber-400" /> Daily Node Target
+            </span>
+            <span className="text-amber-400 font-mono font-black">{currency}{target.toLocaleString()}</span>
           </div>
-          <div className="w-full h-[3px] bg-white/20 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-white rounded-full transition-all duration-1000"
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            ></div>
+          <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/5 p-[2px]">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(progress, 100)}%` }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+              className="h-full bg-gradient-to-r from-blue-500 via-amber-400 to-amber-300 rounded-full"
+            ></motion.div>
+          </div>
+          <div className="flex justify-between text-[8px] text-gray-500 font-black uppercase tracking-widest pt-0.5">
+            <span>Tunnel Efficiency: {Math.round(Math.min(progress, 100))}%</span>
+            <span>Secure Sync Active</span>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
