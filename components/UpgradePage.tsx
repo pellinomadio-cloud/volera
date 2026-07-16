@@ -118,17 +118,30 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
     accountName: 'Volerapay Node Ledger Services'
   });
 
+  // Proof upload & pending state variables
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofBase64, setProofBase64] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [activePendingRequest, setActivePendingRequest] = useState<any | null>(null);
+  const [loadingPendingCheck, setLoadingPendingCheck] = useState(true);
+
   useEffect(() => {
-    const loadSettings = async () => {
+    const loadSettingsAndPending = async () => {
+      setLoadingPendingCheck(true);
+      if (user.email) {
+        const pending = await authService.getActivePendingUpgradeRequest(user.email);
+        setActivePendingRequest(pending);
+      }
       const s = await authService.getAppSettings();
       setSettings({
         bankName: s.bankName,
         accountNumber: s.accountNumber,
         accountName: s.accountName
       });
+      setLoadingPendingCheck(false);
     };
-    loadSettings();
-  }, []);
+    loadSettingsAndPending();
+  }, [user.email]);
 
   const handleUpgrade = (tier: UpgradeTier) => {
     if (tier.level <= currentLevel) {
@@ -155,23 +168,155 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
     setTimeout(() => setCopiedText(false), 2000);
   };
 
-  const handleConfirmTransfer = () => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setProofFile(file);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProofBase64(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleConfirmTransfer = async () => {
     if (!selectedTierForPayment) return;
+    if (!proofBase64) {
+      setErrorMessage("Please choose or drag a payment receipt screenshot first.");
+      return;
+    }
+    setErrorMessage(null);
     setVerifyingPayment(true);
     
-    // Simulate smart contract payment consensus verification
-    setTimeout(() => {
-      setVerifyingPayment(false);
-      onUpgradeSuccess(selectedTierForPayment.level, selectedTierForPayment.price);
-      const levelNum = selectedTierForPayment.level;
-      const tierName = selectedTierForPayment.name;
+    const success = await authService.submitUpgradeRequest({
+      email: user.email || '',
+      username: user.name || 'Anonymous',
+      requestedLevel: selectedTierForPayment.level,
+      price: selectedTierForPayment.price,
+      proofBase64: proofBase64
+    });
+
+    if (success) {
+      if (user.email) {
+        const pending = await authService.getActivePendingUpgradeRequest(user.email);
+        setActivePendingRequest(pending);
+      }
       setSelectedTierForPayment(null);
+      setProofFile(null);
+      setProofBase64('');
       setFeedbackMsg({
         type: 'success',
-        text: `Consensus Reached! Payment logged in Central Bank Node Ledger. Successfully upgraded to ${tierName}!`
+        text: `Your upgrade request has been successfully submitted and logged. Awaiting node ledger validation!`
       });
-    }, 4000);
+    } else {
+      setErrorMessage("Failed to submit request to node network. Please retry.");
+    }
+    setVerifyingPayment(false);
   };
+
+  if (loadingPendingCheck) {
+    return (
+      <div className="py-12 text-center text-white">
+        <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+          Loading Wallet Node Credentials...
+        </p>
+      </div>
+    );
+  }
+
+  if (activePendingRequest) {
+    const matchingTier = UPGRADE_TIERS.find(t => t.level === activePendingRequest.requestedLevel);
+    const submittedDate = new Date(activePendingRequest.submittedAt).toLocaleString();
+
+    return (
+      <div className="py-2 animate-fadeIn text-white">
+        {/* Page Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <button 
+            onClick={onBack} 
+            className="p-1.5 hover:bg-white/5 rounded-xl transition-colors border border-white/5"
+          >
+            <ArrowLeft size={18} className="text-gray-400" />
+          </button>
+          <div>
+            <h2 className="text-base font-black italic tracking-widest text-amber-400 uppercase">PROCESSING UPGRADE</h2>
+            <p className="text-[8px] text-gray-500 uppercase font-black tracking-widest">Awaiting Admin Settlement</p>
+          </div>
+        </div>
+
+        {/* Processing Banner */}
+        <div className="relative rounded-3xl p-6 mb-6 overflow-hidden border border-yellow-500/20 bg-gradient-to-br from-[#1b1507] via-[#0d0a04] to-[#040406] text-center">
+          <div className="w-12 h-12 rounded-full border-2 border-yellow-400 border-t-transparent animate-spin mx-auto mb-4 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-yellow-400/10 flex items-center justify-center">
+              <Zap size={16} className="text-yellow-400 animate-pulse" />
+            </div>
+          </div>
+          <h3 className="text-sm font-black text-yellow-400 uppercase tracking-wider mb-2">
+            PENDING VALIDATION
+          </h3>
+          <p className="text-[10px] text-gray-300 leading-relaxed font-semibold">
+            Your transfer payment of <span className="text-yellow-400">₦{activePendingRequest.price.toLocaleString()}</span> is currently undergoing security audit by our network nodes. 
+          </p>
+          <p className="text-[9px] text-gray-400 leading-relaxed mt-2">
+            Target Tier: <strong className="text-white">{matchingTier?.name || `Level ${activePendingRequest.requestedLevel}`}</strong>
+          </p>
+        </div>
+
+        {/* Invoice Detail */}
+        <div className="glass-card rounded-[2rem] p-5 mb-6 border-white/5 bg-gradient-to-b from-[#0c0c14] to-[#040406] space-y-3.5">
+          <div className="flex items-center gap-2 text-amber-400 border-b border-white/5 pb-2">
+            <Award size={13} />
+            <span className="text-[10px] font-black uppercase tracking-wider">Transaction Ledger Details</span>
+          </div>
+
+          <div className="space-y-3 font-medium">
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-gray-500 uppercase font-bold">Request ID</span>
+              <span className="text-white font-mono text-[9px]">{activePendingRequest.id}</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-gray-500 uppercase font-bold">Submitted At</span>
+              <span className="text-white">{submittedDate}</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-gray-500 uppercase font-bold">Status</span>
+              <span className="px-2 py-0.5 bg-yellow-400/15 border border-yellow-400/20 text-yellow-400 font-black uppercase text-[8px] tracking-widest rounded-full">
+                PROCESSING
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Proof Preview */}
+        {activePendingRequest.proofBase64 && (
+          <div className="glass-card rounded-[2rem] p-5 mb-6 border-white/5 bg-gradient-to-b from-white/[0.01] to-[#040406] space-y-3">
+            <span className="text-[8px] text-gray-500 uppercase font-black tracking-widest block">Submitted Proof of Payment</span>
+            <div className="rounded-xl overflow-hidden max-h-48 border border-white/5 bg-black/20 flex justify-center p-2">
+              <img src={activePendingRequest.proofBase64} alt="Submitted Receipt" className="object-contain max-h-full rounded-lg" referrerPolicy="no-referrer" />
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-3 mb-24">
+          <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/5 text-center">
+            <p className="text-[9.5px] text-gray-500 font-semibold leading-relaxed">
+              If the central validator has not approved or declined your payment within 24 hours of submission, you will be permitted to upload a new receipt.
+            </p>
+          </div>
+          
+          <button
+            onClick={onBack}
+            className="w-full bg-white/[0.02] hover:bg-white/5 border border-white/5 text-gray-400 py-3.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-colors text-center block"
+          >
+            RETURN TO WALLET
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (selectedTierForPayment) {
     return (
@@ -179,7 +324,10 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
         {/* Payment Page Header */}
         <div className="flex items-center gap-4 mb-6">
           <button 
-            onClick={() => setSelectedTierForPayment(null)} 
+            onClick={() => {
+              setSelectedTierForPayment(null);
+              setErrorMessage(null);
+            }} 
             className="p-1.5 hover:bg-white/5 rounded-xl transition-colors border border-white/5"
           >
             <ArrowLeft size={18} className="text-gray-400" />
@@ -260,6 +408,65 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
           </div>
         </div>
 
+        {/* Upload Proof of Payment Section */}
+        <div className="glass-card rounded-[2rem] p-6 mb-5 border-white/5 bg-gradient-to-b from-white/[0.01] to-[#040406] space-y-4">
+          <div className="flex items-center gap-2 text-amber-400 border-b border-white/5 pb-2.5">
+            <Sparkles size={14} />
+            <span className="text-[10px] font-black uppercase tracking-wider">Upload Payment Proof</span>
+          </div>
+
+          <p className="text-[10px] text-gray-400 leading-relaxed font-medium">
+            Please take a screenshot of your successful transfer receipt and upload it below:
+          </p>
+
+          <div className="space-y-3">
+            <label className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-5 hover:bg-white/[0.02] cursor-pointer transition-all">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <div className="text-center">
+                {proofFile ? (
+                  <div className="space-y-2">
+                    <CheckCircle size={24} className="mx-auto text-emerald-400" />
+                    <span className="text-[10px] font-black text-emerald-400 block truncate max-w-[240px]">
+                      {proofFile.name}
+                    </span>
+                    <span className="text-[8px] text-gray-500 block uppercase font-bold">
+                      Click to change image
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Award size={24} className="mx-auto text-gray-400" />
+                    <span className="text-[10px] font-black text-gray-300 block">
+                      CHOOSE RECEIPT SCREENSHOT
+                    </span>
+                    <span className="text-[8px] text-gray-500 block uppercase font-bold">
+                      Supports JPG, PNG, WEBP
+                    </span>
+                  </div>
+                )}
+              </div>
+            </label>
+
+            {proofBase64 && (
+              <div className="rounded-xl overflow-hidden max-h-36 border border-white/5 bg-black/20 flex justify-center p-2">
+                <img src={proofBase64} alt="Receipt preview" className="object-contain max-h-full rounded-lg" referrerPolicy="no-referrer" />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {errorMessage && (
+          <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-2xl mb-5 flex gap-2">
+            <ShieldAlert size={14} className="shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
         {/* Action Button Section */}
         <div className="space-y-3 mb-24">
           <button
@@ -270,7 +477,7 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
             {verifyingPayment ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                VERIFYING LEDGER DEPOSIT BLOCK...
+                SUBMITTING TO CONSENSUS...
               </>
             ) : (
               'I HAVE MADE THE TRANSFER'
@@ -279,7 +486,10 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
 
           <button
             disabled={verifyingPayment}
-            onClick={() => setSelectedTierForPayment(null)}
+            onClick={() => {
+              setSelectedTierForPayment(null);
+              setErrorMessage(null);
+            }}
             className="w-full bg-white/[0.02] hover:bg-white/5 border border-white/5 text-gray-400 py-3.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-colors text-center block"
           >
             CANCEL AND GO BACK

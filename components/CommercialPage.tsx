@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, ShieldCheck, Search, Database, RefreshCw, Layers, Wallet, Mail, Settings, Send } from 'lucide-react';
+import { ArrowLeft, Users, ShieldCheck, Search, Database, RefreshCw, Layers, Wallet, Mail, Settings, Send, CheckCircle, XCircle, Clock, Image, Sparkles } from 'lucide-react';
 import { authService } from '../services/authService';
 
 interface CommercialPageProps {
@@ -18,7 +18,14 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
   const [isSaving, setIsSaving] = useState(false);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<'operators' | 'settings'>('operators');
+  const [activeTab, setActiveTab] = useState<'operators' | 'upgrades' | 'settings'>('operators');
+
+  // Upgrade requests state variables
+  const [upgradeRequests, setUpgradeRequests] = useState<any[]>([]);
+  const [loadingUpgrades, setLoadingUpgrades] = useState(false);
+  const [upgradeFilter, setUpgradeFilter] = useState<'all' | 'pending' | 'approved' | 'declined'>('pending');
+  const [actioningId, setActioningId] = useState<string | null>(null);
+  const [selectedReceiptUrl, setSelectedReceiptUrl] = useState<string | null>(null);
 
   // App settings state
   const [telegramLink, setTelegramLink] = useState('');
@@ -50,15 +57,45 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
     setIsSaving(false);
   };
 
+  const loadUpgradeRequests = async () => {
+    setLoadingUpgrades(true);
+    try {
+      const list = await authService.getUpgradeRequests();
+      list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      setUpgradeRequests(list);
+    } catch (err) {
+      console.error("Failed to load upgrade requests:", err);
+    } finally {
+      setLoadingUpgrades(false);
+    }
+  };
+
   const loadUsersData = async () => {
     setRefreshing(true);
     try {
       const allUsers = await authService.getUsers();
       setUsers(allUsers);
+      await loadUpgradeRequests();
     } catch (err) {
       console.error("Failed to load users from Firebase:", err);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleAction = async (requestId: string, status: 'approved' | 'declined', email: string, requestedLevel: number) => {
+    setActioningId(requestId);
+    try {
+      const success = await authService.updateUpgradeRequestStatus(requestId, status, email, requestedLevel);
+      if (success) {
+        await loadUsersData();
+      } else {
+        alert("Failed to update status. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActioningId(null);
     }
   };
 
@@ -172,7 +209,7 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
       <div className="flex gap-2 p-1 bg-black/40 border border-white/5 rounded-2xl mb-6">
         <button
           onClick={() => setActiveTab('operators')}
-          className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
+          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${
             activeTab === 'operators'
               ? 'bg-gradient-to-r from-red-500/20 to-orange-500/10 text-orange-400 border border-orange-500/20 shadow-md shadow-orange-500/5'
               : 'text-gray-500 hover:text-gray-300'
@@ -181,8 +218,26 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
           Operators
         </button>
         <button
+          onClick={() => setActiveTab('upgrades')}
+          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all relative ${
+            activeTab === 'upgrades'
+              ? 'bg-gradient-to-r from-red-500/20 to-orange-500/10 text-orange-400 border border-orange-500/20 shadow-md shadow-orange-500/5'
+              : 'text-gray-500 hover:text-gray-300'
+          }`}
+        >
+          Upgrades
+          {upgradeRequests.filter(r => r.status === 'pending').length > 0 && (
+            <span className="absolute -top-1.5 -right-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[8px] text-white items-center justify-center font-black">
+                {upgradeRequests.filter(r => r.status === 'pending').length}
+              </span>
+            </span>
+          )}
+        </button>
+        <button
           onClick={() => setActiveTab('settings')}
-          className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
+          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${
             activeTab === 'settings'
               ? 'bg-gradient-to-r from-red-500/20 to-orange-500/10 text-orange-400 border border-orange-500/20 shadow-md shadow-orange-500/5'
               : 'text-gray-500 hover:text-gray-300'
@@ -352,6 +407,136 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'upgrades' && (
+        <div className="space-y-4 pb-24 animate-fadeIn">
+          {/* Status Filter */}
+          <div className="flex gap-1 p-1 bg-black/20 border border-white/5 rounded-xl">
+            {(['all', 'pending', 'approved', 'declined'] as const).map((filterType) => {
+              const count = filterType === 'all' 
+                ? upgradeRequests.length 
+                : upgradeRequests.filter(r => r.status === filterType).length;
+              return (
+                <button
+                  key={filterType}
+                  onClick={() => setUpgradeFilter(filterType)}
+                  className={`flex-1 py-2 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                    upgradeFilter === filterType
+                      ? 'bg-white/10 text-white'
+                      : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  {filterType} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Upgrade Requests list */}
+          <div className="space-y-3">
+            {upgradeRequests.filter(r => upgradeFilter === 'all' || r.status === upgradeFilter).length > 0 ? (
+              upgradeRequests
+                .filter(r => upgradeFilter === 'all' || r.status === upgradeFilter)
+                .map((req, index) => {
+                  const statusColors = {
+                    pending: 'border-yellow-500/20 bg-yellow-500/5 text-yellow-400',
+                    approved: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400',
+                    declined: 'border-red-500/20 bg-red-500/5 text-red-400'
+                  }[req.status as 'pending' | 'approved' | 'declined'] || 'border-white/5 text-white';
+
+                  return (
+                    <div 
+                      key={req.id || index}
+                      className="glass-card rounded-2xl p-4 border border-white/5 bg-gradient-to-r from-white/[0.01] to-[#060608] flex flex-col gap-3"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <span className="text-[11px] font-black uppercase text-white block font-sans tracking-wide">
+                            {req.username || 'Anonymous'}
+                          </span>
+                          <span className="text-[8px] font-mono text-gray-500 block truncate max-w-[180px]">
+                            {req.email}
+                          </span>
+                          <span className="text-[8px] text-gray-400 block font-medium">
+                            Submitted: {new Date(req.submittedAt).toLocaleString()}
+                          </span>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-xs font-mono font-black text-amber-400 block">
+                            ₦{req.price.toLocaleString()}
+                          </span>
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wider mt-1 ${statusColors}`}>
+                            {req.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-white/5 pt-2.5 flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[8px] text-gray-500 uppercase font-bold">Target Upgrade</span>
+                          <span className="px-1.5 py-0.5 bg-orange-500/10 border border-orange-500/20 text-[7px] font-black text-orange-400 rounded">
+                            LEVEL {req.requestedLevel} NODE
+                          </span>
+                        </div>
+
+                        {req.proofBase64 && (
+                          <div className="space-y-1.5">
+                            <span className="text-[7.5px] text-gray-500 uppercase font-black tracking-widest block">Payment Receipt</span>
+                            <div className="rounded-xl overflow-hidden border border-white/5 bg-black/40 flex justify-center p-1 cursor-zoom-in" onClick={() => setSelectedReceiptUrl(req.proofBase64)}>
+                              <img src={req.proofBase64} alt="Proof" className="object-cover h-24 w-full rounded-lg" referrerPolicy="no-referrer" />
+                            </div>
+                          </div>
+                        )}
+
+                        {req.status === 'pending' && (
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() => handleAction(req.id, 'declined', req.email, req.requestedLevel)}
+                              disabled={actioningId !== null}
+                              className="flex-1 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[8px] font-black uppercase tracking-widest rounded-lg transition-colors"
+                            >
+                              DECLINE PAYMENT
+                            </button>
+                            <button
+                              onClick={() => handleAction(req.id, 'approved', req.email, req.requestedLevel)}
+                              disabled={actioningId !== null}
+                              className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-green-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-md shadow-emerald-500/10 transition-all border border-emerald-500/20"
+                            >
+                              APPROVE UPGRADE
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+            ) : (
+              <div className="text-center py-12 bg-white/[0.01] rounded-2xl border border-dashed border-white/5 text-gray-500">
+                <Database size={24} className="mx-auto text-gray-600 mb-1.5" />
+                <p className="text-[9.5px] font-black uppercase tracking-widest">
+                  No {upgradeFilter} requests found
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Receipt Modal */}
+      {selectedReceiptUrl && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-center items-center p-4 animate-fadeIn" onClick={() => setSelectedReceiptUrl(null)}>
+          <div className="relative max-w-lg w-full bg-[#0a0a0c] border border-white/10 rounded-3xl p-4 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <span className="text-[9px] text-gray-400 uppercase font-black tracking-widest">PAYMENT RECEIPT ENLARGED</span>
+              <button onClick={() => setSelectedReceiptUrl(null)} className="px-2.5 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-white font-black text-[9px] uppercase tracking-wider">CLOSE</button>
+            </div>
+            <div className="overflow-auto max-h-[70vh] flex justify-center bg-black rounded-2xl p-1">
+              <img src={selectedReceiptUrl} alt="Receipt Enlarged" className="max-w-full object-contain" referrerPolicy="no-referrer" />
+            </div>
           </div>
         </div>
       )}

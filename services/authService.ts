@@ -284,5 +284,146 @@ export const authService = {
       console.error("Firestore updateAppSettings error:", err);
       return false;
     }
+  },
+
+  // Upgrade requests local sync
+  getUpgradeRequestsSync: (): any[] => {
+    const raw = localStorage.getItem('volerapay_upgrade_requests');
+    return raw ? JSON.parse(raw) : [];
+  },
+
+  // Submit upgrade request
+  submitUpgradeRequest: async (request: {
+    email: string;
+    username: string;
+    requestedLevel: number;
+    price: number;
+    proofBase64: string;
+  }): Promise<boolean> => {
+    try {
+      const requestId = `${request.email.toLowerCase()}_${Date.now()}`;
+      const docRef = doc(db, 'upgradeRequests', requestId);
+      const reqDoc = {
+        id: requestId,
+        email: request.email.toLowerCase(),
+        username: request.username,
+        requestedLevel: request.requestedLevel,
+        price: request.price,
+        proofBase64: request.proofBase64,
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+        handledAt: null
+      };
+      await setDoc(docRef, reqDoc);
+
+      // Save to local storage for offline fallback/caching
+      const requests = authService.getUpgradeRequestsSync();
+      requests.push(reqDoc);
+      localStorage.setItem('volerapay_upgrade_requests', JSON.stringify(requests));
+      return true;
+    } catch (err) {
+      console.error("Firestore submitUpgradeRequest error:", err);
+      // Fallback: save to local storage anyway
+      try {
+        const reqDoc = {
+          id: `${request.email.toLowerCase()}_${Date.now()}`,
+          email: request.email.toLowerCase(),
+          username: request.username,
+          requestedLevel: request.requestedLevel,
+          price: request.price,
+          proofBase64: request.proofBase64,
+          status: 'pending',
+          submittedAt: new Date().toISOString(),
+          handledAt: null
+        };
+        const requests = authService.getUpgradeRequestsSync();
+        requests.push(reqDoc);
+        localStorage.setItem('volerapay_upgrade_requests', JSON.stringify(requests));
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+  },
+
+  // Get upgrade requests (all, for admin)
+  getUpgradeRequests: async (): Promise<any[]> => {
+    try {
+      const col = collection(db, 'upgradeRequests');
+      const snap = await getDocs(col);
+      const list: any[] = [];
+      snap.forEach((doc) => {
+        list.push(doc.data());
+      });
+      if (list.length > 0) {
+        localStorage.setItem('volerapay_upgrade_requests', JSON.stringify(list));
+        return list;
+      }
+    } catch (err) {
+      console.error("Firestore getUpgradeRequests error:", err);
+    }
+    return authService.getUpgradeRequestsSync();
+  },
+
+  // Update upgrade request status
+  updateUpgradeRequestStatus: async (requestId: string, status: 'approved' | 'declined', email: string, requestedLevel: number): Promise<boolean> => {
+    try {
+      const docRef = doc(db, 'upgradeRequests', requestId);
+      const now = new Date().toISOString();
+      await setDoc(docRef, { status, handledAt: now }, { merge: true });
+
+      // Update in local cache
+      const requests = authService.getUpgradeRequestsSync();
+      const idx = requests.findIndex(r => r.id === requestId);
+      if (idx >= 0) {
+        requests[idx].status = status;
+        requests[idx].handledAt = now;
+        localStorage.setItem('volerapay_upgrade_requests', JSON.stringify(requests));
+      }
+
+      // If approved, update user's level
+      if (status === 'approved') {
+        await authService.updateUserByAdmin(email, { level: requestedLevel });
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Firestore updateUpgradeRequestStatus error, using local fallback:", err);
+      // Fallback
+      const requests = authService.getUpgradeRequestsSync();
+      const idx = requests.findIndex(r => r.id === requestId);
+      if (idx >= 0) {
+        requests[idx].status = status;
+        requests[idx].handledAt = new Date().toISOString();
+        localStorage.setItem('volerapay_upgrade_requests', JSON.stringify(requests));
+        if (status === 'approved') {
+          await authService.updateUserByAdmin(email, { level: requestedLevel });
+        }
+        return true;
+      }
+      return false;
+    }
+  },
+
+  // Fetch active pending upgrade request (submitted less than 24 hours ago)
+  getActivePendingUpgradeRequest: async (email: string): Promise<any | null> => {
+    const requests = await authService.getUpgradeRequests();
+    const userPending = requests.filter(r => r.email.toLowerCase() === email.toLowerCase() && r.status === 'pending');
+    
+    if (userPending.length === 0) return null;
+
+    // Sort by submittedAt descending to find the latest
+    userPending.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+    const latestPending = userPending[0];
+
+    // Check if it's within 24 hours
+    const submittedTime = new Date(latestPending.submittedAt).getTime();
+    const currentTime = Date.now();
+    const diffHours = (currentTime - submittedTime) / (1000 * 60 * 60);
+
+    if (diffHours < 24) {
+      return latestPending;
+    }
+    return null;
   }
 };
