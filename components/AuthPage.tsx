@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Mail, User, Lock, ArrowRight, ShieldCheck, Users, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { authService } from '../services/authService';
+import logoImg from '../src/assets/images/volerapay_icon_1784200310877.jpg';
 
 interface AuthPageProps {
   onAuthSuccess: (user: any) => void;
@@ -122,7 +123,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
       >
         <div className="w-20 h-20 mb-3 rounded-2xl overflow-hidden shadow-2xl border border-amber-500/30 p-1 bg-gradient-to-br from-amber-400 to-blue-600">
           <img 
-            src="/src/assets/images/volerapay_icon_1784200310877.jpg" 
+            src={logoImg} 
             alt="Volerapay Logo" 
             className="w-full h-full object-cover rounded-xl"
             referrerPolicy="no-referrer"
