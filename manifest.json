@@ -1,0 +1,25 @@
+{
+  "name": "Volerapay Node Ledger",
+  "short_name": "Volerapay",
+  "description": "Premium High-Tech Digital Node Ledger System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#030712",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/src/assets/images/volerapay_icon_1784200310877.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/assets/images/volerapay_icon_1784200310877.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

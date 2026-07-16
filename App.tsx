@@ -171,6 +171,12 @@ const App: React.FC = () => {
     }
   };
 
+  const confirmSimulatedInstall = () => {
+    setIsAppInstalled(true);
+    localStorage.setItem('volerapay_installed', 'true');
+    setShowInstallGuide(false);
+  };
+
   const handleInstallToggle = () => {
     if (isAppInstalled) {
       setIsAppInstalled(false);
