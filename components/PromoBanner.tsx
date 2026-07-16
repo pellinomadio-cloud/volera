@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Smartphone, ShieldCheck, Cpu, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { authService } from '../services/authService';
 
 const PromoBanner: React.FC = () => {
+  const [telegramUrl, setTelegramUrl] = useState('');
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const settings = await authService.getAppSettings();
+      setTelegramUrl(settings.telegramLink);
+    };
+    loadSettings();
+  }, []);
+
   const handleGetStarted = () => {
-    window.open('https://t.me/novapay999', '_blank');
+    window.open(telegramUrl || 'https://t.me/novapay999', '_blank');
   };
 
   return (

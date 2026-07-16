@@ -236,5 +236,53 @@ export const authService = {
       console.error("Firestore updateUserByAdmin error:", err);
       return false;
     }
+  },
+
+  // App global settings synchronization
+  getAppSettingsSync: (): { telegramLink: string; bankName: string; accountNumber: string; accountName: string } => {
+    const raw = localStorage.getItem('volerapay_app_settings');
+    return raw ? JSON.parse(raw) : {
+      telegramLink: "https://t.me/novapay999",
+      bankName: "Moniepoint Bank",
+      accountNumber: "8164299246",
+      accountName: "Volerapay Node Ledger Services"
+    };
+  },
+
+  getAppSettings: async (): Promise<{ telegramLink: string; bankName: string; accountNumber: string; accountName: string }> => {
+    try {
+      const docRef = doc(db, 'settings', 'app');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data() as any;
+        const formatted = {
+          telegramLink: data.telegramLink || "https://t.me/novapay999",
+          bankName: data.bankName || "Moniepoint Bank",
+          accountNumber: data.accountNumber || "8164299246",
+          accountName: data.accountName || "Volerapay Node Ledger Services"
+        };
+        localStorage.setItem('volerapay_app_settings', JSON.stringify(formatted));
+        return formatted;
+      }
+    } catch (err) {
+      console.error("Firestore getAppSettings error:", err);
+    }
+    return authService.getAppSettingsSync();
+  },
+
+  updateAppSettings: async (updates: { telegramLink?: string; bankName?: string; accountNumber?: string; accountName?: string }): Promise<boolean> => {
+    try {
+      const current = authService.getAppSettingsSync();
+      const updated = { ...current, ...updates };
+      
+      const docRef = doc(db, 'settings', 'app');
+      await setDoc(docRef, updated, { merge: true });
+      localStorage.setItem('volerapay_app_settings', JSON.stringify(updated));
+      console.log("App settings updated successfully in Firestore and cache");
+      return true;
+    } catch (err) {
+      console.error("Firestore updateAppSettings error:", err);
+      return false;
+    }
   }
 };

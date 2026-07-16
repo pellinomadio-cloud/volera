@@ -1,14 +1,34 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Globe, ExternalLink, Send, Users } from 'lucide-react';
+import { authService } from '../services/authService';
 
 interface CommunityPageProps {
   onBack: () => void;
 }
 
 const CommunityPage: React.FC<CommunityPageProps> = ({ onBack }) => {
+  const [telegramUrl, setTelegramUrl] = useState('');
+  const [telegramHandle, setTelegramHandle] = useState('@novapay999');
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const settings = await authService.getAppSettings();
+      setTelegramUrl(settings.telegramLink);
+      // Derive display handle from link if possible
+      try {
+        const parts = settings.telegramLink.split('/');
+        const handle = parts[parts.length - 1];
+        if (handle) {
+          setTelegramHandle('@' + handle);
+        }
+      } catch (e) {}
+    };
+    loadSettings();
+  }, []);
+
   const handleJoinTelegram = () => {
-    window.open('https://t.me/novapay999', '_blank');
+    window.open(telegramUrl || 'https://t.me/novapay999', '_blank');
   };
 
   return (
@@ -73,7 +93,7 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onBack }) => {
         </div>
         
         <p className="text-[9px] text-center text-gray-600 uppercase tracking-widest leading-relaxed">
-          Official node verification @novapay999. Avoid clones and unofficial groups.
+          Official node verification {telegramHandle}. Avoid clones and unofficial groups.
         </p>
       </div>
     </div>

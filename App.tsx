@@ -328,7 +328,8 @@ const App: React.FC = () => {
     } else if (id === 'upgrade') {
       setCurrentView('upgrade');
     } else if (id === 'support') {
-      window.open('https://t.me/novapay999', '_blank');
+      const settings = authService.getAppSettingsSync();
+      window.open(settings.telegramLink || 'https://t.me/novapay999', '_blank');
     }
   };
 
