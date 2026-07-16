@@ -83,8 +83,8 @@ const generateJobsForPage = (page: number, search: string, categoryFilter: strin
     // Payments are NOT less than 14,900 Naira
     const basePay = 14900 + ((currentJobIndex * 150) % 25000); 
     
-    // Levels required: 1 to 5
-    const levelRequired = 1 + (currentJobIndex % 5);
+    // All jobs require Level 2 to apply
+    const levelRequired = 2;
     
     const id = `VP-JOB-${currentJobIndex + 1000}`;
     

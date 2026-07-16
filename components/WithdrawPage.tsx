@@ -35,6 +35,10 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick
       setError('Enter a valid amount');
       return;
     }
+    if (Number(formData.amount) < 200000) {
+      setError('Minimum withdrawal is ₦200,000');
+      return;
+    }
     if (Number(formData.amount) > balance) {
       setError('Insufficient funds');
       return;
@@ -106,17 +110,22 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick
 
         <div className="space-y-4">
           {/* Amount */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-blue-500 font-bold">
-              {currency}
+          <div className="space-y-1.5">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-blue-500 font-bold">
+                {currency}
+              </div>
+              <input
+                type="number"
+                placeholder="0.00"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:border-blue-500 transition-all outline-none font-semibold"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              />
             </div>
-            <input
-              type="number"
-              placeholder="0.00"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:border-blue-500 transition-all outline-none"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-            />
+            <p className="text-[10px] text-amber-400 font-black uppercase tracking-wider pl-1.5">
+              Minimum withdrawal: ₦200,000
+            </p>
           </div>
 
           {/* Account Number */}
