@@ -12,11 +12,15 @@ import AIChatModal from './components/AIChatModal';
 import AuthPage from './components/AuthPage';
 import SettingsModal from './components/SettingsModal';
 import WithdrawPage from './components/WithdrawPage';
-import BuyBPCPage from './components/BuyBPCPage';
+import MyJobsPage from './components/MyJobsPage';
 import CommunityPage from './components/CommunityPage';
 import NotificationsPage from './components/NotificationsPage';
 import InvitePage from './components/InvitePage';
 import FreeWithdrawalPage from './components/FreeWithdrawalPage';
+import JobsPage from './components/JobsPage';
+import UpgradePage from './components/UpgradePage';
+import { SidebarDrawer } from './components/SidebarDrawer';
+import { CommercialPage } from './components/CommercialPage';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -26,6 +30,7 @@ const App: React.FC = () => {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isWithdrawLoading, setIsWithdrawLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // PWA Install States
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -87,7 +92,8 @@ const App: React.FC = () => {
         email: savedUser.email,
         balance: userBalance, 
         dailyTarget: 200000,
-        currency: "₦"
+        currency: "₦",
+        level: savedUser.level || 1
       };
       setUser(profile);
       setIsAuthenticated(true);
@@ -126,7 +132,8 @@ const App: React.FC = () => {
       email: userData.email,
       balance: userBalance, 
       dailyTarget: 200000,
-      currency: "₦"
+      currency: "₦",
+      level: userData.level || 1
     };
     setUser(profile);
     setIsAuthenticated(true);
@@ -270,14 +277,73 @@ const App: React.FC = () => {
   };
 
   const handleQuickAction = (id: string) => {
-    if (id === 'node') {
-      setCurrentView('buy-node');
+    if (id === 'my-jobs') {
+      setCurrentView('my-jobs');
     } else if (id === 'community') {
       setCurrentView('community');
     } else if (id === 'invite') {
       setCurrentView('invite');
-    } else if (id === 'support' || id === 'video' || id === 'broadcast') {
+    } else if (id === 'jobs') {
+      setCurrentView('jobs');
+    } else if (id === 'upgrade') {
+      setCurrentView('upgrade');
+    } else if (id === 'support') {
       window.open('https://t.me/novapay999', '_blank');
+    }
+  };
+
+  const handleUpgradeSuccess = (newLevel: number, cost: number) => {
+    if (user) {
+      const updatedBalance = user.balance - cost;
+      const updatedUser = { ...user, balance: updatedBalance, level: newLevel };
+      setUser(updatedUser);
+
+      const newTransaction: Transaction = {
+        id: `TX-UPGRADE-${Date.now()}`,
+        title: `Wallet Level ${newLevel} Upgrade`,
+        date: 'Today',
+        category: 'Upgrade',
+        amount: cost,
+        type: 'debit'
+      };
+      
+      const updatedTransactions = [newTransaction, ...transactions];
+      setTransactions(updatedTransactions);
+
+      localStorage.setItem(`volerapay_tx_${user.email}`, JSON.stringify(updatedTransactions));
+      const savedUser = authService.getCurrentUser();
+      if (savedUser) {
+        savedUser.balance = updatedBalance;
+        savedUser.level = newLevel;
+        authService.register(savedUser);
+      }
+    }
+  };
+
+  const handleJobSuccess = (earnings: number, title: string) => {
+    if (user) {
+      const updatedBalance = user.balance + earnings;
+      const updatedUser = { ...user, balance: updatedBalance };
+      setUser(updatedUser);
+
+      const newTransaction: Transaction = {
+        id: `TX-JOB-${Date.now()}`,
+        title: `Job: ${title}`,
+        date: 'Today',
+        category: 'Job Earning',
+        amount: earnings,
+        type: 'credit'
+      };
+      
+      const updatedTransactions = [newTransaction, ...transactions];
+      setTransactions(updatedTransactions);
+
+      localStorage.setItem(`volerapay_tx_${user.email}`, JSON.stringify(updatedTransactions));
+      const savedUser = authService.getCurrentUser();
+      if (savedUser) {
+        savedUser.balance = updatedBalance;
+        authService.register(savedUser);
+      }
     }
   };
 
@@ -295,16 +361,16 @@ const App: React.FC = () => {
     );
   }
 
-  const isFullScreenView = ['withdraw', 'buy-node', 'community', 'notifications', 'invite', 'free-withdraw'].includes(currentView);
+  const isFullScreenView = ['withdraw', 'my-jobs', 'community', 'notifications', 'invite', 'free-withdraw', 'jobs', 'upgrade', 'commercial'].includes(currentView);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col max-w-md mx-auto relative shadow-2xl overflow-x-hidden border-x border-white/5">
       {/* Header - Compact */}
       <header className="px-6 py-4 flex justify-between items-center bg-black/90 backdrop-blur-md sticky top-0 z-[60] border-b border-white/5">
         <button 
-          onClick={() => window.open('https://t.me/novapay999', '_blank')}
+          onClick={() => setIsSidebarOpen(true)}
           className="p-1.5 hover:bg-white/5 rounded-xl transition-colors"
-          title="Telegram Support"
+          title="Sidebar Menu"
         >
           <Menu size={18} className="text-gray-400" />
         </button>
@@ -402,10 +468,12 @@ const App: React.FC = () => {
           />
         )}
 
-        {currentView === 'buy-node' && user && (
-          <BuyBPCPage 
+        {currentView === 'my-jobs' && user && (
+          <MyJobsPage 
             onBack={() => setCurrentView('wallet')}
-            user={{ name: user.name, email: user.email }}
+            user={user}
+            onGoToJobs={() => setCurrentView('jobs')}
+            onGoToUpgrade={() => setCurrentView('upgrade')}
           />
         )}
 
@@ -425,6 +493,29 @@ const App: React.FC = () => {
           <InvitePage 
             onBack={() => setCurrentView('wallet')}
             onRewardClaimed={handleInviteReward}
+          />
+        )}
+
+        {currentView === 'jobs' && user && (
+          <JobsPage 
+            onBack={() => setCurrentView('wallet')}
+            user={user}
+            onJobSuccess={handleJobSuccess}
+            onGoToUpgrade={() => setCurrentView('upgrade')}
+          />
+        )}
+
+        {currentView === 'upgrade' && user && (
+          <UpgradePage 
+            onBack={() => setCurrentView('wallet')}
+            user={user}
+            onUpgradeSuccess={handleUpgradeSuccess}
+          />
+        )}
+
+        {currentView === 'commercial' && (
+          <CommercialPage 
+            onBack={() => setCurrentView('wallet')}
           />
         )}
 
@@ -458,8 +549,8 @@ const App: React.FC = () => {
                   <p className="text-[9px] font-black text-amber-400">VERIFIED</p>
                 </div>
                 <div className="p-3 glass-card rounded-2xl">
-                  <p className="text-[8px] text-gray-500 uppercase mb-1">Secure</p>
-                  <p className="text-[9px] font-black text-emerald-400">PROTECTED</p>
+                  <p className="text-[8px] text-gray-500 uppercase font-black tracking-tighter mb-1">Shield Level</p>
+                  <p className="text-[9px] font-black text-emerald-400">LEVEL {user.level || 1}</p>
                 </div>
              </div>
              <div className="px-4 space-y-3">
@@ -489,6 +580,12 @@ const App: React.FC = () => {
 
       {user && (
         <>
+          <SidebarDrawer 
+            isOpen={isSidebarOpen} 
+            onClose={() => setIsSidebarOpen(false)} 
+            onNavigate={setCurrentView}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+          />
           <AIChatModal 
             isOpen={isAIChatOpen} 
             onClose={() => setIsAIChatOpen(false)} 

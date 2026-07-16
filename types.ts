@@ -14,9 +14,10 @@ export interface UserProfile {
   dailyTarget: number;
   currency: string;
   email?: string;
+  level?: number; // 1 to 5
 }
 
-export type View = 'wallet' | 'history' | 'profile' | 'explore' | 'withdraw' | 'buy-node' | 'community' | 'notifications' | 'invite' | 'free-withdraw';
+export type View = 'wallet' | 'history' | 'profile' | 'explore' | 'withdraw' | 'my-jobs' | 'community' | 'notifications' | 'invite' | 'free-withdraw' | 'jobs' | 'upgrade' | 'commercial';
 
 export interface Testimonial {
   id: string;
