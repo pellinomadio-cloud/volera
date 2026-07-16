@@ -11,13 +11,16 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadUsersData = () => {
+  const loadUsersData = async () => {
     setRefreshing(true);
-    setTimeout(() => {
-      const allUsers = authService.getUsers();
+    try {
+      const allUsers = await authService.getUsers();
       setUsers(allUsers);
+    } catch (err) {
+      console.error("Failed to load users from Firebase:", err);
+    } finally {
       setRefreshing(false);
-    }, 800);
+    }
   };
 
   useEffect(() => {

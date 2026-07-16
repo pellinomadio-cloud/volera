@@ -20,65 +20,80 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
   });
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAction = () => {
+  const handleAction = async () => {
     setError('');
     setSuccessMsg('');
-    if (isLogin) {
-      const user = authService.login(formData.email, formData.password);
-      if (user) {
-        onAuthSuccess(user);
-      } else {
-        setError('Invalid email or 6-digit pin');
-      }
-    } else {
-      if (!formData.username || !formData.email || !formData.password) {
-        setError('All fields are required');
-        return;
-      }
-      if (formData.password.length !== 6 || !/^\d+$/.test(formData.password)) {
-        setError('Pin must be exactly 6 digits');
-        return;
-      }
-      if (!formData.agreeTerms) {
-        setError('You must agree to the Terms & Conditions');
-        return;
-      }
-
-      // Check if username is unique
-      const users = authService.getUsers();
-      if (users.some(u => u.username?.toLowerCase() === formData.username.toLowerCase())) {
-        setError('Username is already taken');
-        return;
-      }
-      if (users.some(u => u.email.toLowerCase() === formData.email.toLowerCase())) {
-        setError('Email is already registered');
-        return;
-      }
-
-      // New user registration defaults to 0.0 Naira
-      const newUser = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        balance: 0.0, // Strict requirement: 0.0 Naira on registration
-        referrals: [],
-        createdAt: new Date().toISOString()
-      };
-
-      authService.register(newUser);
-
-      // Apply referral code if provided
-      if (formData.referralCode) {
-        const applied = authService.applyReferral(formData.username, formData.referralCode);
-        if (applied) {
-          setSuccessMsg('Referral code applied successfully! +₦10,000 credited to your referrer.');
+    setIsLoading(true);
+    try {
+      if (isLogin) {
+        const user = await authService.login(formData.email, formData.password);
+        if (user) {
+          onAuthSuccess(user);
+        } else {
+          setError('Invalid email or 6-digit pin');
         }
-      }
+      } else {
+        if (!formData.username || !formData.email || !formData.password) {
+          setError('All fields are required');
+          setIsLoading(false);
+          return;
+        }
+        if (formData.password.length !== 6 || !/^\d+$/.test(formData.password)) {
+          setError('Pin must be exactly 6 digits');
+          setIsLoading(false);
+          return;
+        }
+        if (!formData.agreeTerms) {
+          setError('You must agree to the Terms & Conditions');
+          setIsLoading(false);
+          return;
+        }
 
-      setTimeout(() => {
-        onAuthSuccess(newUser);
-      }, formData.referralCode ? 2000 : 500);
+        // Check if username is unique
+        const users = await authService.getUsers();
+        if (users.some(u => u.username?.toLowerCase() === formData.username.toLowerCase())) {
+          setError('Username is already taken');
+          setIsLoading(false);
+          return;
+        }
+        if (users.some(u => (u.email || '').toLowerCase() === formData.email.toLowerCase())) {
+          setError('Email is already registered');
+          setIsLoading(false);
+          return;
+        }
+
+        // New user registration defaults to 0.0 Naira
+        const newUser = {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          balance: 0.0, // Strict requirement: 0.0 Naira on registration
+          referrals: [],
+          createdAt: new Date().toISOString()
+        };
+
+        await authService.register(newUser);
+
+        // Apply referral code if provided
+        if (formData.referralCode) {
+          const applied = await authService.applyReferral(formData.username, formData.referralCode);
+          if (applied) {
+            setSuccessMsg('Referral code applied successfully! +₦10,000 credited to your referrer.');
+          }
+        }
+
+        setTimeout(() => {
+          onAuthSuccess(newUser);
+        }, formData.referralCode ? 2000 : 500);
+      }
+    } catch (e) {
+      setError('An error occurred during authentication. Please try again.');
+    } finally {
+      if (isLogin) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -300,17 +315,29 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
 
         {/* Dynamic Glowing Action Button */}
         <motion.button
-          whileHover={{ scale: 1.01, boxShadow: "0 0 20px rgba(245, 158, 11, 0.15)" }}
-          whileTap={{ scale: 0.99 }}
+          whileHover={isLoading ? {} : { scale: 1.01, boxShadow: "0 0 20px rgba(245, 158, 11, 0.15)" }}
+          whileTap={isLoading ? {} : { scale: 0.99 }}
           onClick={handleAction}
+          disabled={isLoading}
           className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest mt-6 flex items-center justify-center gap-2 transition-all text-black ${
-            isLogin 
-              ? 'bg-gradient-to-r from-blue-400 to-amber-400 hover:brightness-110 shadow-lg shadow-blue-500/10' 
-              : 'bg-gradient-to-r from-amber-400 to-amber-300 hover:brightness-110 shadow-lg shadow-amber-500/10'
+            isLoading 
+              ? 'bg-gray-700 cursor-not-allowed opacity-55 text-gray-400'
+              : isLogin 
+                ? 'bg-gradient-to-r from-blue-400 to-amber-400 hover:brightness-110 shadow-lg shadow-blue-500/10' 
+                : 'bg-gradient-to-r from-amber-400 to-amber-300 hover:brightness-110 shadow-lg shadow-amber-500/10'
           }`}
         >
-          {isLogin ? 'Initialize Node' : 'Confirm Registration'}
-          <ArrowRight size={14} className="stroke-[3.5]" />
+          {isLoading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+              Synchronizing...
+            </span>
+          ) : (
+            <>
+              {isLogin ? 'Initialize Node' : 'Confirm Registration'}
+              <ArrowRight size={14} className="stroke-[3.5]" />
+            </>
+          )}
         </motion.button>
 
         {/* Tab Toggle */}
