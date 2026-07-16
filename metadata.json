@@ -1,0 +1,10 @@
+{
+  "name": "Volerapay",
+  "description": "A premium, high-tech digital wallet application featuring real-time transaction tracking, balance management, and an integrated AI financial assistant powered by Gemini.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
