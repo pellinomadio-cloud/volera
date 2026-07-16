@@ -209,5 +209,32 @@ export const authService = {
       }
     }
     return false;
+  },
+
+  updateUserByAdmin: async (email: string, updates: { balance?: number; level?: number }) => {
+    try {
+      const userDocRef = doc(db, 'users', email.toLowerCase());
+      await setDoc(userDocRef, updates, { merge: true });
+      console.log(`User ${email} updated by admin successfully`);
+      
+      // Update local storage cache
+      const users = authService.getUsersSync();
+      const idx = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+      if (idx >= 0) {
+        users[idx] = { ...users[idx], ...updates };
+        authService.saveUsersSync(users);
+      }
+      
+      // If the modified user is the active logged in user, sync their session as well
+      const current = authService.getCurrentUser();
+      if (current && current.email.toLowerCase() === email.toLowerCase()) {
+        const updatedCurrent = { ...current, ...updates };
+        localStorage.setItem('volerapay_user', JSON.stringify(updatedCurrent));
+      }
+      return true;
+    } catch (err) {
+      console.error("Firestore updateUserByAdmin error:", err);
+      return false;
+    }
   }
 };

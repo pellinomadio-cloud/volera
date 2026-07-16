@@ -57,6 +57,46 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
+  // Live Sync with Firestore for active user profile
+  useEffect(() => {
+    if (!isAuthenticated || !user?.email) return;
+
+    let active = true;
+    const syncProfile = async () => {
+      try {
+        const latestUsers = await authService.getUsers();
+        if (!active) return;
+        const matched = latestUsers.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+        if (matched) {
+          // If balance or level changed, update state
+          if (matched.balance !== user.balance || matched.level !== user.level || matched.username !== user.name) {
+            setUser({
+              name: matched.username || matched.email.split('@')[0],
+              email: matched.email,
+              balance: matched.balance !== undefined ? matched.balance : 0.0,
+              dailyTarget: 200000,
+              currency: "₦",
+              level: matched.level || 1
+            });
+            // Update active session storage cache
+            localStorage.setItem('volerapay_user', JSON.stringify(matched));
+          }
+        }
+      } catch (err) {
+        console.error("Profile periodic sync error:", err);
+      }
+    };
+
+    // Run immediately and then every 7 seconds
+    syncProfile();
+    const timer = setInterval(syncProfile, 7000);
+
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [isAuthenticated, user?.email, user?.balance, user?.level, user?.name]);
+
   // Check for PWA Installation Support
   useEffect(() => {
     // Check if running in standalone mode
