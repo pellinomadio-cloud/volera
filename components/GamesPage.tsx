@@ -715,11 +715,11 @@ const CoinFlipGame: React.FC<CoinFlipProps> = ({ balance, currency, onReward, on
             {/* Tails side */}
             <div 
               style={{ transform: 'rotateY(180deg)' }}
-              className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-600 via-amber-500 to-yellow-400 border-4 border-white flex items-center justify-center shadow-inner backface-hidden"
+              className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-500 border-4 border-white flex items-center justify-center shadow-inner backface-hidden"
             >
-              <div className="w-16 h-16 rounded-full border border-dashed border-black/20 flex flex-col items-center justify-center">
+              <div className="w-16 h-16 rounded-full border border-dashed border-white/30 flex flex-col items-center justify-center">
                 <span className="text-xl leading-none">💎</span>
-                <span className="text-[8px] font-black text-black leading-none uppercase mt-1 font-mono">TAILS</span>
+                <span className="text-[8px] font-black text-white leading-none uppercase mt-1 font-mono">TAILS</span>
               </div>
             </div>
           </div>
@@ -737,7 +737,7 @@ const CoinFlipGame: React.FC<CoinFlipProps> = ({ balance, currency, onReward, on
               </button>
               <button 
                 onClick={() => setChoice('tails')}
-                className={`py-3 rounded-2xl border font-black text-[10px] uppercase tracking-wider transition-all ${choice === 'tails' ? 'bg-yellow-500/10 border-yellow-500 text-yellow-400 shadow-lg shadow-yellow-500/5' : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'}`}
+                className={`py-3 rounded-2xl border font-black text-[10px] uppercase tracking-wider transition-all ${choice === 'tails' ? 'bg-blue-500/10 border-blue-500 text-blue-400 shadow-lg shadow-blue-500/5' : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'}`}
               >
                 SELECT TAILS
               </button>
