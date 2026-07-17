@@ -37,10 +37,10 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, target, currency, on
               <Sparkles size={11} className="animate-spin text-amber-400" style={{ animationDuration: '6s' }} />
             </div>
             
-            <p className="text-gray-400 text-[12px] font-semibold uppercase tracking-wider">Available Balance</p>
+            <p className="text-gray-400 text-[13px] font-bold uppercase tracking-wider">Available Balance</p>
             <div className="flex items-center gap-2.5">
-              <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-100 to-amber-200 tracking-tight leading-none">
-                {showBalance ? `${currency}${balance.toLocaleString()}` : '•••••••'}
+              <h2 className="text-6xl xs:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-100 to-amber-200 tracking-tight leading-none">
+                {showBalance ? `${currency}${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '•••••••'}
               </h2>
               <button 
                 onClick={() => setShowBalance(!showBalance)}
