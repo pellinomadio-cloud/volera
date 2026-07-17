@@ -762,20 +762,20 @@ const App: React.FC = () => {
           />
 
           {/* Telegram Support Floating Button */}
-          <div className="absolute bottom-24 right-5 z-[80] flex flex-col items-end gap-2">
+          <div className="absolute top-[45%] -translate-y-1/2 right-0 z-[80] flex flex-col items-end">
             <a
               href={supportTelegramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 via-indigo-600 to-indigo-700 hover:brightness-110 text-white font-bold py-2.5 px-4 rounded-full shadow-lg shadow-blue-500/20 active:scale-95 transition-all text-[11px] uppercase tracking-wider border border-blue-400/20"
+              className="flex items-center gap-1.5 bg-gradient-to-l from-indigo-600 via-indigo-700 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black py-3 pl-3.5 pr-2.5 rounded-l-2xl shadow-xl shadow-indigo-950/50 active:scale-95 transition-all text-[10px] uppercase tracking-wider border-y border-l border-white/10"
               id="support-toggle-button"
             >
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
               </span>
               <span>Support</span>
-              <MessageCircle size={14} className="animate-bounce" />
+              <MessageCircle size={14} className="text-blue-200" />
             </a>
           </div>
         </>
