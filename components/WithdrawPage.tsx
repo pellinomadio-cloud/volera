@@ -89,20 +89,6 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick
       </div>
 
       <div className="space-y-6">
-        {/* Free Withdrawal Interstitial */}
-        <div className="p-5 rounded-3xl bg-blue-600/10 border border-blue-500/30 flex flex-col gap-3 shadow-xl shadow-blue-500/5">
-          <div className="flex items-center gap-2">
-            <Zap size={16} className="text-blue-500 animate-pulse" />
-            <p className="text-xs font-black text-white uppercase tracking-tight">Want to withdraw free without NODE code?</p>
-          </div>
-          <button 
-            onClick={onFreeWithdrawClick}
-            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
-          >
-            Access Free Withdrawal
-          </button>
-        </div>
-
         <div className="glass-card p-4 rounded-2xl border-blue-500/20">
           <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Available to Withdraw</p>
           <p className="text-2xl font-black text-white">{currency}{balance.toLocaleString()}</p>
