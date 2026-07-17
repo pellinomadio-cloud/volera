@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Cpu, ArrowUpCircle, Briefcase, Headset, Globe, UserPlus } from 'lucide-react';
+import { Cpu, ArrowUpCircle, Briefcase, Gamepad2, Globe, UserPlus } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface QuickActionsProps {
@@ -11,7 +11,7 @@ const actions = [
   { id: 'my-jobs', icon: Cpu, label: 'MY JOB', accent: 'amber', color: 'text-amber-400 group-hover:text-amber-300' },
   { id: 'upgrade', icon: ArrowUpCircle, label: 'Upgrade', accent: 'blue', color: 'text-blue-400 group-hover:text-blue-300' },
   { id: 'jobs', icon: Briefcase, label: 'JOB Portal', accent: 'gold', color: 'text-yellow-400 group-hover:text-yellow-300' },
-  { id: 'support', icon: Headset, label: 'Support', accent: 'blue', color: 'text-blue-400 group-hover:text-blue-300' },
+  { id: 'games', icon: Gamepad2, label: 'Games Arena', accent: 'gold', color: 'text-yellow-400 group-hover:text-yellow-300' },
   { id: 'community', icon: Globe, label: 'Community', accent: 'amber', color: 'text-amber-400 group-hover:text-amber-300' },
   { id: 'invite', icon: UserPlus, label: 'Invite', accent: 'blue', color: 'text-blue-400 group-hover:text-blue-300' },
 ];

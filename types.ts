@@ -17,7 +17,7 @@ export interface UserProfile {
   level?: number; // 1 to 5
 }
 
-export type View = 'wallet' | 'history' | 'profile' | 'explore' | 'withdraw' | 'my-jobs' | 'community' | 'notifications' | 'invite' | 'free-withdraw' | 'jobs' | 'upgrade' | 'commercial';
+export type View = 'wallet' | 'history' | 'profile' | 'explore' | 'withdraw' | 'my-jobs' | 'community' | 'notifications' | 'invite' | 'free-withdraw' | 'jobs' | 'upgrade' | 'commercial' | 'games';
 
 export interface Testimonial {
   id: string;

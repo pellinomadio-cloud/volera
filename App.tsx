@@ -21,6 +21,7 @@ import JobsPage from './components/JobsPage';
 import UpgradePage from './components/UpgradePage';
 import { SidebarDrawer } from './components/SidebarDrawer';
 import { CommercialPage } from './components/CommercialPage';
+import { GamesPage } from './components/GamesPage';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -390,9 +391,8 @@ const App: React.FC = () => {
       setCurrentView('jobs');
     } else if (id === 'upgrade') {
       setCurrentView('upgrade');
-    } else if (id === 'support') {
-      const settings = authService.getAppSettingsSync();
-      window.open(settings.telegramLink || 'https://t.me/novapay999', '_blank');
+    } else if (id === 'games') {
+      setCurrentView('games');
     }
   };
 
@@ -451,6 +451,36 @@ const App: React.FC = () => {
     }
   };
 
+  const handleGameEarn = (amount: number, gameTitle: string) => {
+    if (user) {
+      const updatedBalance = user.balance + amount;
+      const updatedUser = { ...user, balance: updatedBalance };
+      setUser(updatedUser);
+
+      const isDebit = amount < 0;
+      const displayAmount = Math.abs(amount);
+
+      const newTransaction: Transaction = {
+        id: `TX-GAME-${Date.now()}`,
+        title: `Game: ${gameTitle}`,
+        date: 'Today',
+        category: 'Gaming',
+        amount: displayAmount,
+        type: isDebit ? 'debit' : 'credit'
+      };
+
+      const updatedTransactions = [newTransaction, ...transactions];
+      setTransactions(updatedTransactions);
+
+      localStorage.setItem(`volerapay_tx_${user.email}`, JSON.stringify(updatedTransactions));
+      const savedUser = authService.getCurrentUser();
+      if (savedUser) {
+        savedUser.balance = updatedBalance;
+        authService.register(savedUser);
+      }
+    }
+  };
+
   if (!isAuthenticated) {
     return <AuthPage onAuthSuccess={handleAuthSuccess} />;
   }
@@ -465,7 +495,7 @@ const App: React.FC = () => {
     );
   }
 
-  const isFullScreenView = ['withdraw', 'my-jobs', 'community', 'notifications', 'invite', 'free-withdraw', 'jobs', 'upgrade', 'commercial'].includes(currentView);
+  const isFullScreenView = ['withdraw', 'my-jobs', 'community', 'notifications', 'invite', 'free-withdraw', 'jobs', 'upgrade', 'commercial', 'games'].includes(currentView);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col max-w-md mx-auto relative shadow-2xl overflow-x-hidden border-x border-white/5">
@@ -622,6 +652,15 @@ const App: React.FC = () => {
         {currentView === 'commercial' && (
           <CommercialPage 
             onBack={() => setCurrentView('wallet')}
+          />
+        )}
+
+        {currentView === 'games' && user && (
+          <GamesPage 
+            onBack={() => setCurrentView('wallet')}
+            balance={user.balance}
+            currency={user.currency}
+            onEarn={handleGameEarn}
           />
         )}
 
