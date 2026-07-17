@@ -33,7 +33,7 @@ const PromoBanner: React.FC = () => {
       <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(circle_at_50%_40%,rgba(245,158,11,0.25),transparent_55%)]"></div>
 
       <div className="relative z-10 p-6 flex flex-col items-center text-center">
-        <span className="px-3 py-1 bg-amber-400/10 border border-amber-400/20 text-[9px] font-black text-amber-400 uppercase tracking-[0.25em] rounded-full mb-3 animate-pulse">
+        <span className="px-3.5 py-1.5 bg-amber-400/10 border border-amber-400/20 text-[11px] font-black text-amber-400 uppercase tracking-[0.25em] rounded-full mb-3 animate-pulse">
           Secure Tunnel Core
         </span>
         <h3 className="text-[17px] font-black tracking-[0.25em] mb-5 text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-400 to-amber-200 italic uppercase">
@@ -48,7 +48,7 @@ const PromoBanner: React.FC = () => {
           ))}
         </div>
 
-        <p className="text-[10px] text-gray-400 max-w-[240px] leading-relaxed mb-6">
+        <p className="text-xs text-gray-400 max-w-[270px] leading-relaxed mb-6">
           Unlock high-speed transactions with authorized Central Bank of Nigeria node gateways.
         </p>
 

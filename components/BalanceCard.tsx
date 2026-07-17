@@ -32,14 +32,14 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, target, currency, on
         <div className="flex justify-between items-start mb-6">
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 text-amber-400/80">
-              <ShieldCheck size={12} className="stroke-[2.5]" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Verified Ledger Node</span>
-              <Sparkles size={10} className="animate-spin text-amber-400" style={{ animationDuration: '6s' }} />
+              <ShieldCheck size={13} className="stroke-[2.5]" />
+              <span className="text-[11px] font-black uppercase tracking-[0.2em]">Verified Ledger Node</span>
+              <Sparkles size={11} className="animate-spin text-amber-400" style={{ animationDuration: '6s' }} />
             </div>
             
-            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Available Balance</p>
+            <p className="text-gray-400 text-[12px] font-semibold uppercase tracking-wider">Available Balance</p>
             <div className="flex items-center gap-2.5">
-              <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-100 to-amber-200 tracking-tight leading-none">
+              <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-100 to-amber-200 tracking-tight leading-none">
                 {showBalance ? `${currency}${balance.toLocaleString()}` : '•••••••'}
               </h2>
               <button 
@@ -64,11 +64,11 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, target, currency, on
 
         {/* Dynamic target tracking and golden progress bar */}
         <div className="space-y-2.5 pt-4 border-t border-white/5">
-          <div className="flex justify-between items-center text-[10px]">
+          <div className="flex justify-between items-center text-xs">
             <span className="text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1">
-              <TrendingUp size={12} className="text-amber-400" /> Daily Node Target
+              <TrendingUp size={13} className="text-amber-400" /> Daily Node Target
             </span>
-            <span className="text-amber-400 font-mono font-black">{currency}{target.toLocaleString()}</span>
+            <span className="text-amber-400 font-mono font-black text-xs">{currency}{target.toLocaleString()}</span>
           </div>
           <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/5 p-[2px]">
             <motion.div 
@@ -78,7 +78,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, target, currency, on
               className="h-full bg-gradient-to-r from-blue-500 via-amber-400 to-amber-300 rounded-full"
             ></motion.div>
           </div>
-          <div className="flex justify-between text-[8px] text-gray-500 font-black uppercase tracking-widest pt-0.5">
+          <div className="flex justify-between text-[10px] text-gray-500 font-black uppercase tracking-widest pt-0.5">
             <span>Tunnel Efficiency: {Math.round(Math.min(progress, 100))}%</span>
             <span>Secure Sync Active</span>
           </div>

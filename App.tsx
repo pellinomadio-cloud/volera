@@ -661,6 +661,7 @@ const App: React.FC = () => {
             balance={user.balance}
             currency={user.currency}
             onEarn={handleGameEarn}
+            userLevel={user.level || 1}
           />
         )}
 

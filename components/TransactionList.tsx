@@ -13,13 +13,13 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, currenc
   return (
     <div className="mt-4 mb-24">
       <div className="flex justify-between items-center mb-4 px-1">
-        <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
+        <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">
           {onViewAll ? 'Recent Transactions' : 'All Transactions'}
         </h3>
         {onViewAll && (
           <button 
             onClick={onViewAll}
-            className="text-amber-400 text-[11px] font-black uppercase tracking-wider hover:underline transition-all"
+            className="text-amber-400 text-xs font-black uppercase tracking-wider hover:underline transition-all"
           >
             View all
           </button>
@@ -53,7 +53,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, currenc
                       <p className="text-xs font-bold text-white">{tx.title}</p>
                       <ShieldCheck size={11} className="text-emerald-500" />
                     </div>
-                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wide mt-0.5">{tx.date} • {tx.category}</p>
+                    <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wide mt-0.5">{tx.date} • {tx.category}</p>
                   </div>
                 </div>
                 
@@ -61,7 +61,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, currenc
                   <p className={`text-xs font-black font-mono tracking-tight ${isCredit ? 'text-blue-400' : 'text-amber-400'}`}>
                     {isCredit ? '+' : '-'}{currency}{tx.amount.toLocaleString()}
                   </p>
-                  <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest">SUCCESS</span>
+                  <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">SUCCESS</span>
                 </div>
               </motion.div>
             );

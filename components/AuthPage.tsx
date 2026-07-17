@@ -90,6 +90,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
         };
 
         await authService.register(newUser);
+        localStorage.setItem('volerapay_just_registered', 'true');
 
         // Apply referral code if provided
         if (formData.referralCode) {

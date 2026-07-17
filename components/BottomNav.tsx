@@ -30,7 +30,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, onViewChange }) => {
                 size={isActive ? 24 : 20} 
                 className={isActive ? 'text-blue-500' : 'text-gray-500 group-hover:text-gray-300 transition-colors'} 
               />
-              <span className={`text-[10px] font-bold ${isActive ? 'text-blue-500' : 'text-gray-600 group-hover:text-gray-400 transition-colors'}`}>
+              <span className={`text-[12px] font-black tracking-wide ${isActive ? 'text-blue-500' : 'text-gray-600 group-hover:text-gray-400 transition-colors'}`}>
                 {item.label}
               </span>
             </button>
