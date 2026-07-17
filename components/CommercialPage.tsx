@@ -29,6 +29,8 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
 
   // App settings state
   const [telegramLink, setTelegramLink] = useState('');
+  const [whatsappLink, setWhatsappLink] = useState('');
+  const [supportTelegramLink, setSupportTelegramLink] = useState('');
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
@@ -103,6 +105,8 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
     try {
       const settings = await authService.getAppSettings();
       setTelegramLink(settings.telegramLink);
+      setWhatsappLink(settings.whatsappLink || '');
+      setSupportTelegramLink(settings.supportTelegramLink || '');
       setBankName(settings.bankName);
       setAccountNumber(settings.accountNumber);
       setAccountName(settings.accountName);
@@ -122,6 +126,8 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
     setSettingsMessage(null);
     const success = await authService.updateAppSettings({
       telegramLink,
+      whatsappLink,
+      supportTelegramLink,
       bankName,
       accountNumber,
       accountName
@@ -572,6 +578,42 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
                   placeholder="e.g. https://t.me/yourchannel"
                   value={telegramLink}
                   onChange={(e) => setTelegramLink(e.target.value)}
+                  className="w-full bg-transparent border-none py-3 px-1 text-[11px] text-white focus:outline-none font-medium"
+                />
+              </div>
+            </div>
+
+            {/* WhatsApp Link */}
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-gray-500 block">
+                Official WhatsApp Channel URL
+              </label>
+              <div className="flex items-center bg-black/40 border border-white/10 rounded-xl overflow-hidden focus-within:border-amber-400/40">
+                <span className="pl-3.5 pr-1.5 text-[10px] font-mono text-gray-500"><span className="text-emerald-400 font-bold">WA</span></span>
+                <input
+                  type="url"
+                  required
+                  placeholder="e.g. https://chat.whatsapp.com/invite_code"
+                  value={whatsappLink}
+                  onChange={(e) => setWhatsappLink(e.target.value)}
+                  className="w-full bg-transparent border-none py-3 px-1 text-[11px] text-white focus:outline-none font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Support Telegram Link */}
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-gray-500 block">
+                Customer Support Telegram Link
+              </label>
+              <div className="flex items-center bg-black/40 border border-white/10 rounded-xl overflow-hidden focus-within:border-amber-400/40">
+                <span className="pl-3.5 pr-1.5 text-[10px] font-mono text-gray-500"><Send size={11} className="text-blue-400" /></span>
+                <input
+                  type="url"
+                  required
+                  placeholder="e.g. https://t.me/your_support"
+                  value={supportTelegramLink}
+                  onChange={(e) => setSupportTelegramLink(e.target.value)}
                   className="w-full bg-transparent border-none py-3 px-1 text-[11px] text-white focus:outline-none font-medium"
                 />
               </div>

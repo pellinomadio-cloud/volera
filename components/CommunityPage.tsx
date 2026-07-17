@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Globe, ExternalLink, Send, Users } from 'lucide-react';
+import { ArrowLeft, Globe, ExternalLink, Send, Users, MessageCircle } from 'lucide-react';
 import { authService } from '../services/authService';
 
 interface CommunityPageProps {
@@ -9,12 +9,14 @@ interface CommunityPageProps {
 
 const CommunityPage: React.FC<CommunityPageProps> = ({ onBack }) => {
   const [telegramUrl, setTelegramUrl] = useState('');
+  const [whatsappUrl, setWhatsappUrl] = useState('');
   const [telegramHandle, setTelegramHandle] = useState('@novapay999');
 
   useEffect(() => {
     const loadSettings = async () => {
       const settings = await authService.getAppSettings();
       setTelegramUrl(settings.telegramLink);
+      setWhatsappUrl(settings.whatsappLink || 'https://chat.whatsapp.com/L3gO8z8S5qC6N5uY8L4p2O');
       // Derive display handle from link if possible
       try {
         const parts = settings.telegramLink.split('/');
@@ -29,6 +31,10 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onBack }) => {
 
   const handleJoinTelegram = () => {
     window.open(telegramUrl || 'https://t.me/novapay999', '_blank');
+  };
+
+  const handleJoinWhatsApp = () => {
+    window.open(whatsappUrl || 'https://chat.whatsapp.com/L3gO8z8S5qC6N5uY8L4p2O', '_blank');
   };
 
   return (
@@ -51,7 +57,7 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onBack }) => {
 
           <h3 className="text-2xl font-black text-white mb-3">Join the Ecosystem</h3>
           <p className="text-gray-400 text-sm leading-relaxed mb-8">
-            Connect with thousands of Easy Wallet users, get real-time updates on node deployments, and access exclusive financial insights in our official Telegram community.
+            Connect with thousands of Easy Wallet users, get real-time updates on node deployments, and access exclusive financial insights in our official Telegram & WhatsApp channels.
           </p>
 
           <div className="grid grid-cols-2 gap-3 mb-8">
@@ -65,14 +71,25 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onBack }) => {
             </div>
           </div>
 
-          <button
-            onClick={handleJoinTelegram}
-            className="w-full blue-gradient py-5 rounded-2xl font-black text-sm shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-95 transition-all"
-          >
-            <Send size={20} />
-            JOIN TELEGRAM CHANNEL
-            <ExternalLink size={16} className="opacity-50 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleJoinTelegram}
+              className="w-full blue-gradient py-5 rounded-2xl font-black text-sm shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <Send size={20} />
+              JOIN TELEGRAM CHANNEL
+              <ExternalLink size={16} className="opacity-50 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            </button>
+
+            <button
+              onClick={handleJoinWhatsApp}
+              className="w-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-green-600 py-5 rounded-2xl font-black text-sm shadow-xl shadow-emerald-500/10 flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-95 transition-all text-white border border-emerald-500/20"
+            >
+              <MessageCircle size={20} className="text-emerald-300" />
+              JOIN WHATSAPP CHANNEL
+              <ExternalLink size={16} className="opacity-50 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform text-emerald-300" />
+            </button>
+          </div>
         </div>
 
         <div className="bg-blue-500/5 p-6 rounded-3xl border border-blue-500/10">

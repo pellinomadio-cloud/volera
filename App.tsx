@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Menu, User, ShieldCheck, Loader2, Smartphone, X, Check, Award, ArrowRight } from 'lucide-react';
+import { Bell, Menu, User, ShieldCheck, Loader2, Smartphone, X, Check, Award, ArrowRight, MessageCircle } from 'lucide-react';
 import { INITIAL_TRANSACTIONS, WITHDRAWAL_ALERTS } from './constants';
 import { View, Transaction, UserProfile } from './types';
 import { authService } from './services/authService';
@@ -37,6 +37,23 @@ const App: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
+
+  // App Support Link state
+  const [supportTelegramUrl, setSupportTelegramUrl] = useState('https://t.me/novapay999');
+
+  useEffect(() => {
+    const fetchSupportLink = async () => {
+      try {
+        const settings = await authService.getAppSettings();
+        if (settings?.supportTelegramLink) {
+          setSupportTelegramUrl(settings.supportTelegramLink);
+        }
+      } catch (err) {
+        console.error("Failed to load support link in App mount:", err);
+      }
+    };
+    fetchSupportLink();
+  }, [isAuthenticated]);
 
   // Back button / exit interception state
   const [showExitToast, setShowExitToast] = useState(false);
@@ -743,6 +760,24 @@ const App: React.FC = () => {
             currentName={user.name}
             onUpdate={handleUpdateUsername}
           />
+
+          {/* Telegram Support Floating Button */}
+          <div className="absolute bottom-24 right-5 z-[80] flex flex-col items-end gap-2">
+            <a
+              href={supportTelegramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 via-indigo-600 to-indigo-700 hover:brightness-110 text-white font-bold py-2.5 px-4 rounded-full shadow-lg shadow-blue-500/20 active:scale-95 transition-all text-[11px] uppercase tracking-wider border border-blue-400/20"
+              id="support-toggle-button"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Support</span>
+              <MessageCircle size={14} className="animate-bounce" />
+            </a>
+          </div>
         </>
       )}
 

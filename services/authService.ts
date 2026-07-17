@@ -240,17 +240,19 @@ export const authService = {
   },
 
   // App global settings synchronization
-  getAppSettingsSync: (): { telegramLink: string; bankName: string; accountNumber: string; accountName: string } => {
+  getAppSettingsSync: (): { telegramLink: string; whatsappLink: string; supportTelegramLink: string; bankName: string; accountNumber: string; accountName: string } => {
     const raw = localStorage.getItem('volerapay_app_settings');
     return raw ? JSON.parse(raw) : {
       telegramLink: "https://t.me/novapay999",
+      whatsappLink: "https://chat.whatsapp.com/L3gO8z8S5qC6N5uY8L4p2O",
+      supportTelegramLink: "https://t.me/novapay999",
       bankName: "Moniepoint Bank",
       accountNumber: "8164299246",
       accountName: "Volerapay Node Ledger Services"
     };
   },
 
-  getAppSettings: async (): Promise<{ telegramLink: string; bankName: string; accountNumber: string; accountName: string }> => {
+  getAppSettings: async (): Promise<{ telegramLink: string; whatsappLink: string; supportTelegramLink: string; bankName: string; accountNumber: string; accountName: string }> => {
     try {
       const docRef = doc(db, 'settings', 'app');
       const snap = await getDoc(docRef);
@@ -258,6 +260,8 @@ export const authService = {
         const data = snap.data() as any;
         const formatted = {
           telegramLink: data.telegramLink || "https://t.me/novapay999",
+          whatsappLink: data.whatsappLink || "https://chat.whatsapp.com/L3gO8z8S5qC6N5uY8L4p2O",
+          supportTelegramLink: data.supportTelegramLink || "https://t.me/novapay999",
           bankName: data.bankName || "Moniepoint Bank",
           accountNumber: data.accountNumber || "8164299246",
           accountName: data.accountName || "Volerapay Node Ledger Services"
@@ -271,7 +275,7 @@ export const authService = {
     return authService.getAppSettingsSync();
   },
 
-  updateAppSettings: async (updates: { telegramLink?: string; bankName?: string; accountNumber?: string; accountName?: string }): Promise<boolean> => {
+  updateAppSettings: async (updates: { telegramLink?: string; whatsappLink?: string; supportTelegramLink?: string; bankName?: string; accountNumber?: string; accountName?: string }): Promise<boolean> => {
     try {
       const current = authService.getAppSettingsSync();
       const updated = { ...current, ...updates };
