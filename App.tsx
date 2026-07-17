@@ -500,6 +500,8 @@ const App: React.FC = () => {
             balance={user.balance}
             currency={user.currency}
             onSuccess={handleWithdrawalSuccess}
+            userLevel={user.level || 1}
+            onGoToUpgrade={() => setCurrentView('upgrade')}
           />
         )}
 
