@@ -667,8 +667,9 @@ const CoinFlipGame: React.FC<CoinFlipProps> = ({ balance, currency, onReward, on
     // Dynamic rotation speed
     const spins = 10; 
     const result: 'heads' | 'tails' = Math.random() > 0.5 ? 'heads' : 'tails';
-    const targetRot = result === 'heads' ? 0 : 180; // 180 is tails/back side of coin
-    const newRot = coinRotation + (spins * 360) + targetRot;
+    // Calculate next rotation to always align perfectly to 0 (heads) or 180 (tails) modulo 360
+    const baseRotation = Math.ceil(coinRotation / 360) * 360;
+    const newRot = baseRotation + (spins * 360) + (result === 'heads' ? 0 : 180);
     
     setCoinRotation(newRot);
 
