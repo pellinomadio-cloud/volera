@@ -37,6 +37,9 @@ const App: React.FC = () => {
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
 
+  // Back button / exit interception state
+  const [showExitToast, setShowExitToast] = useState(false);
+
   // Notification states
   const [currentAlert, setCurrentAlert] = useState<string | null>(null);
   const [showAlert, setShowAlert] = useState(false);
@@ -121,6 +124,66 @@ const App: React.FC = () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
+
+  // Sync currentView with Browser History to support Android / Web back button navigation
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Set initial states
+    window.history.replaceState({ view: 'guard' }, '');
+    window.history.pushState({ view: 'wallet' }, '');
+
+    let lastBackPressTime = 0;
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      const targetView = state?.view;
+
+      if (targetView && targetView !== 'guard') {
+        // If they went back to a real view (like 'wallet' or another page)
+        setCurrentView(targetView);
+      } else {
+        // If the state is 'guard' or null (meaning back button was clicked on the dashboard/wallet view)
+        const now = Date.now();
+        if (now - lastBackPressTime < 2000) {
+          // If clicked twice within 2 seconds, let the browser exit the app
+          window.history.go(-1);
+        } else {
+          lastBackPressTime = now;
+          setShowExitToast(true);
+          setTimeout(() => {
+            setShowExitToast(false);
+          }, 2000);
+
+          // Restore 'wallet' state to history so they can press back again
+          window.history.pushState({ view: 'wallet' }, '');
+          setCurrentView('wallet');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const currentState = window.history.state;
+    // Only push if history state view doesn't match the new view to avoid infinite loops
+    if (!currentState || currentState.view !== currentView) {
+      if (currentView === 'wallet') {
+        // Reset stack to clean slate when entering dashboard
+        window.history.replaceState({ view: 'guard' }, '');
+        window.history.pushState({ view: 'wallet' }, '');
+      } else {
+        window.history.pushState({ view: currentView }, '');
+      }
+    }
+  }, [currentView, isAuthenticated]);
 
   // Persistence: Check if user is already registered/logged in on load
   useEffect(() => {
@@ -697,6 +760,13 @@ const App: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {showExitToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2.5 bg-zinc-950 border border-white/10 text-white text-[10px] uppercase font-bold tracking-widest rounded-xl shadow-2xl z-[250] animate-fadeIn flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse"></span>
+          Press back again to exit
         </div>
       )}
 
