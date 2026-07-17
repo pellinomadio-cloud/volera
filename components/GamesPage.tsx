@@ -705,7 +705,10 @@ const CoinFlipGame: React.FC<CoinFlipProps> = ({ balance, currency, onReward, on
             className="w-24 h-24 rounded-full relative shadow-2xl origin-center"
           >
             {/* Heads side */}
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-600 border-4 border-white flex items-center justify-center shadow-inner backface-hidden z-10">
+            <div 
+              style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+              className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-600 border-4 border-white flex items-center justify-center shadow-inner"
+            >
               <div className="w-16 h-16 rounded-full border border-dashed border-black/20 flex flex-col items-center justify-center">
                 <span className="text-xl leading-none">🪙</span>
                 <span className="text-[8px] font-black text-black leading-none uppercase mt-1">HEADS</span>
@@ -714,8 +717,8 @@ const CoinFlipGame: React.FC<CoinFlipProps> = ({ balance, currency, onReward, on
 
             {/* Tails side */}
             <div 
-              style={{ transform: 'rotateY(180deg)' }}
-              className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-500 border-4 border-white flex items-center justify-center shadow-inner backface-hidden"
+              style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+              className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-500 border-4 border-white flex items-center justify-center shadow-inner"
             >
               <div className="w-16 h-16 rounded-full border border-dashed border-white/30 flex flex-col items-center justify-center">
                 <span className="text-xl leading-none">💎</span>
