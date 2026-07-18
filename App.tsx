@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Menu, User, ShieldCheck, Loader2, Smartphone, X, Check, Award, ArrowRight, MessageCircle, ShieldAlert, Landmark, Send } from 'lucide-react';
+import { Bell, Menu, User, ShieldCheck, Loader2, Smartphone, X, Check, Award, ArrowRight, MessageCircle, ShieldAlert, Landmark, Send, GripVertical } from 'lucide-react';
+import { motion } from 'motion/react';
 import { INITIAL_TRANSACTIONS, WITHDRAWAL_ALERTS } from './constants';
 import { View, Transaction, UserProfile } from './types';
 import { authService } from './services/authService';
@@ -952,15 +953,24 @@ const App: React.FC = () => {
             onUpdate={handleUpdateUsername}
           />
 
-          {/* Telegram Support Floating Button */}
-          <div className="absolute top-[45%] -translate-y-1/2 right-0 z-[80] flex flex-col items-end">
+          {/* Telegram Support Floating Button - Draggable Up and Down */}
+          <motion.div 
+            drag="y"
+            dragConstraints={{ top: -350, bottom: 350 }}
+            dragElastic={0.15}
+            dragMomentum={false}
+            whileDrag={{ scale: 1.05 }}
+            className="absolute top-[45%] -translate-y-1/2 right-0 z-[80] flex flex-col items-end touch-none cursor-grab active:cursor-grabbing"
+            id="support-toggle-container"
+          >
             <a
               href={supportTelegramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 bg-gradient-to-l from-indigo-600 via-indigo-700 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black py-3 pl-3.5 pr-2.5 rounded-l-2xl shadow-xl shadow-indigo-950/50 active:scale-95 transition-all text-[10px] uppercase tracking-wider border-y border-l border-white/10"
+              className="flex items-center gap-1.5 bg-gradient-to-l from-indigo-600 via-indigo-700 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black py-3 pl-2 pr-2.5 rounded-l-2xl shadow-xl shadow-indigo-950/50 active:scale-95 transition-all text-[10px] uppercase tracking-wider border-y border-l border-white/10 select-none"
               id="support-toggle-button"
             >
+              <GripVertical size={11} className="text-white/40 cursor-grab active:cursor-grabbing mr-0.5 shrink-0" />
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
@@ -968,7 +978,7 @@ const App: React.FC = () => {
               <span>Support</span>
               <MessageCircle size={14} className="text-blue-200" />
             </a>
-          </div>
+          </motion.div>
         </>
       )}
 
