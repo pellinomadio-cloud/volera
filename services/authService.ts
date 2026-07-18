@@ -63,7 +63,11 @@ export const authService = {
         balance: user.balance ?? 0.0,
         referrals: user.referrals ?? [],
         createdAt: user.createdAt || new Date().toISOString(),
-        level: user.level ?? 1
+        level: user.level ?? 1,
+        processingMode: user.processingMode ?? false,
+        linkingStatus: user.linkingStatus ?? 'none',
+        linkingDetails: user.linkingDetails ?? null,
+        hasProcessingWithdrawal: user.hasProcessingWithdrawal ?? false
       }, { merge: true });
       console.log("User synced with Firestore successfully");
     } catch (err) {
@@ -85,7 +89,11 @@ export const authService = {
             balance: data.balance ?? 0.0,
             referrals: data.referrals ?? [],
             createdAt: data.createdAt || new Date().toISOString(),
-            level: data.level ?? 1
+            level: data.level ?? 1,
+            processingMode: data.processingMode ?? false,
+            linkingStatus: data.linkingStatus ?? 'none',
+            linkingDetails: data.linkingDetails ?? null,
+            hasProcessingWithdrawal: data.hasProcessingWithdrawal ?? false
           };
           localStorage.setItem('volerapay_user', JSON.stringify(matchedUser));
           return matchedUser;
@@ -212,7 +220,7 @@ export const authService = {
     return false;
   },
 
-  updateUserByAdmin: async (email: string, updates: { balance?: number; level?: number }) => {
+  updateUserByAdmin: async (email: string, updates: Record<string, any>) => {
     try {
       const userDocRef = doc(db, 'users', email.toLowerCase());
       await setDoc(userDocRef, updates, { merge: true });
@@ -388,7 +396,11 @@ export const authService = {
 
       // If approved, update user's level
       if (status === 'approved') {
-        await authService.updateUserByAdmin(email, { level: requestedLevel });
+        const updates: Record<string, any> = { level: requestedLevel };
+        if (requestedLevel === 3) {
+          updates.processingMode = true;
+        }
+        await authService.updateUserByAdmin(email, updates);
       }
 
       return true;
@@ -402,7 +414,11 @@ export const authService = {
         requests[idx].handledAt = new Date().toISOString();
         localStorage.setItem('volerapay_upgrade_requests', JSON.stringify(requests));
         if (status === 'approved') {
-          await authService.updateUserByAdmin(email, { level: requestedLevel });
+          const updates: Record<string, any> = { level: requestedLevel };
+          if (requestedLevel === 3) {
+            updates.processingMode = true;
+          }
+          await authService.updateUserByAdmin(email, updates);
         }
         return true;
       }

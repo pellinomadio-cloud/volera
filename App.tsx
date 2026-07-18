@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Menu, User, ShieldCheck, Loader2, Smartphone, X, Check, Award, ArrowRight, MessageCircle } from 'lucide-react';
+import { Bell, Menu, User, ShieldCheck, Loader2, Smartphone, X, Check, Award, ArrowRight, MessageCircle, ShieldAlert, Landmark } from 'lucide-react';
 import { INITIAL_TRANSACTIONS, WITHDRAWAL_ALERTS } from './constants';
 import { View, Transaction, UserProfile } from './types';
 import { authService } from './services/authService';
@@ -19,6 +19,7 @@ import InvitePage from './components/InvitePage';
 import FreeWithdrawalPage from './components/FreeWithdrawalPage';
 import JobsPage from './components/JobsPage';
 import UpgradePage from './components/UpgradePage';
+import { LinkWithdrawAccountPage } from './components/LinkWithdrawAccountPage';
 import { SidebarDrawer } from './components/SidebarDrawer';
 import { CommercialPage } from './components/CommercialPage';
 import { GamesPage } from './components/GamesPage';
@@ -89,15 +90,26 @@ const App: React.FC = () => {
         if (!active) return;
         const matched = latestUsers.find(u => u.email.toLowerCase() === user.email.toLowerCase());
         if (matched) {
-          // If balance or level changed, update state
-          if (matched.balance !== user.balance || matched.level !== user.level || matched.username !== user.name) {
+          // If balance, level, username, or linking attributes changed, update state
+          if (
+            matched.balance !== user.balance || 
+            matched.level !== user.level || 
+            matched.username !== user.name ||
+            !!matched.processingMode !== !!user.processingMode ||
+            matched.linkingStatus !== user.linkingStatus ||
+            !!matched.hasProcessingWithdrawal !== !!user.hasProcessingWithdrawal
+          ) {
             setUser({
               name: matched.username || matched.email.split('@')[0],
               email: matched.email,
               balance: matched.balance !== undefined ? matched.balance : 0.0,
               dailyTarget: 200000,
               currency: "₦",
-              level: matched.level || 1
+              level: matched.level || 1,
+              processingMode: matched.processingMode ?? false,
+              linkingStatus: matched.linkingStatus ?? 'none',
+              linkingDetails: matched.linkingDetails ?? null,
+              hasProcessingWithdrawal: matched.hasProcessingWithdrawal ?? false
             });
             // Update active session storage cache
             localStorage.setItem('volerapay_user', JSON.stringify(matched));
@@ -116,7 +128,7 @@ const App: React.FC = () => {
       active = false;
       clearInterval(timer);
     };
-  }, [isAuthenticated, user?.email, user?.balance, user?.level, user?.name]);
+  }, [isAuthenticated, user?.email, user?.balance, user?.level, user?.name, user?.processingMode, user?.linkingStatus, user?.hasProcessingWithdrawal]);
 
   // Check for PWA Installation Support
   useEffect(() => {
@@ -214,7 +226,11 @@ const App: React.FC = () => {
         balance: userBalance, 
         dailyTarget: 200000,
         currency: "₦",
-        level: savedUser.level || 1
+        level: savedUser.level || 1,
+        processingMode: savedUser.processingMode ?? false,
+        linkingStatus: savedUser.linkingStatus ?? 'none',
+        linkingDetails: savedUser.linkingDetails ?? null,
+        hasProcessingWithdrawal: savedUser.hasProcessingWithdrawal ?? false
       };
       setUser(profile);
       setIsAuthenticated(true);
@@ -254,7 +270,11 @@ const App: React.FC = () => {
       balance: userBalance, 
       dailyTarget: 200000,
       currency: "₦",
-      level: userData.level || 1
+      level: userData.level || 1,
+      processingMode: userData.processingMode ?? false,
+      linkingStatus: userData.linkingStatus ?? 'none',
+      linkingDetails: userData.linkingDetails ?? null,
+      hasProcessingWithdrawal: userData.hasProcessingWithdrawal ?? false
     };
     setUser(profile);
     setIsAuthenticated(true);
@@ -337,20 +357,26 @@ const App: React.FC = () => {
 
   const handleWithdrawalSuccess = (amount: number) => {
     if (user) {
+      const isProcessing = !!user.processingMode;
       const newTransaction: Transaction = {
         id: Date.now().toString(),
-        title: 'Withdrawal',
+        title: isProcessing ? 'Withdrawal (Processing)' : 'Withdrawal',
         date: 'Today',
         category: 'Transfer',
         amount: amount,
-        type: 'debit'
+        type: 'debit',
+        status: isProcessing ? 'processing' : 'completed'
       };
       
       const updatedTransactions = [newTransaction, ...transactions];
       setTransactions(updatedTransactions);
       
       const updatedBalance = user.balance - amount;
-      const updatedUser = { ...user, balance: updatedBalance };
+      const updatedUser = { 
+        ...user, 
+        balance: updatedBalance,
+        hasProcessingWithdrawal: isProcessing ? true : user.hasProcessingWithdrawal
+      };
       setUser(updatedUser);
       
       // Persist in localStorage
@@ -358,6 +384,9 @@ const App: React.FC = () => {
       const savedUser = authService.getCurrentUser();
       if (savedUser) {
         savedUser.balance = updatedBalance;
+        if (isProcessing) {
+          savedUser.hasProcessingWithdrawal = true;
+        }
         authService.register(savedUser);
       }
 
@@ -587,6 +616,27 @@ const App: React.FC = () => {
         {/* View Routing */}
         {currentView === 'wallet' && user && (
           <>
+            {user.processingMode && user.linkingStatus !== 'pending' && (
+              <div 
+                className="mb-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 shadow-lg shadow-amber-500/5 animate-fadeIn"
+              >
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <ShieldAlert size={16} className="text-amber-400 animate-pulse" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-[11px] font-black uppercase tracking-wider text-amber-400 mb-0.5">Security Clearance Required</h4>
+                  <p className="text-[10px] text-gray-300 leading-relaxed">
+                    Your wallet is in <strong className="text-amber-400 font-bold">Processing Mode</strong>. To complete your active withdrawals, please go to your <strong className="text-white">Profile</strong> and link your withdrawal account.
+                  </p>
+                  <button 
+                    onClick={() => setCurrentView('profile')}
+                    className="mt-2.5 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-white hover:text-amber-400 transition-colors bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5 hover:bg-white/10"
+                  >
+                    Go to Profile <ArrowRight size={10} />
+                  </button>
+                </div>
+              </div>
+            )}
             <BalanceCard 
               balance={user.balance} 
               target={user.dailyTarget} 
@@ -666,6 +716,19 @@ const App: React.FC = () => {
           />
         )}
 
+        {currentView === 'link-account' && user && (
+          <LinkWithdrawAccountPage 
+            onBack={() => setCurrentView('profile')}
+            user={user}
+            onSuccess={() => {
+              // Successfully submitted payment proof for linking
+              const updatedUser = { ...user, linkingStatus: 'pending' as const };
+              setUser(updatedUser);
+              setCurrentView('profile');
+            }}
+          />
+        )}
+
         {currentView === 'commercial' && (
           <CommercialPage 
             onBack={() => setCurrentView('wallet')}
@@ -717,6 +780,30 @@ const App: React.FC = () => {
                 </div>
              </div>
              <div className="px-4 space-y-3">
+               {user.hasProcessingWithdrawal && (
+                 <button 
+                   onClick={() => setCurrentView('link-account')}
+                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:brightness-110 text-white font-black text-[11px] uppercase tracking-wider shadow-lg shadow-blue-500/25 active:scale-95 transition-all border border-blue-400/25 flex items-center justify-center gap-2 mb-3"
+                 >
+                   <Landmark size={14} className="animate-pulse text-blue-200" />
+                   Link Withdrawal Account
+                   {user.linkingStatus === 'pending' && (
+                     <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-[7px] rounded uppercase font-black">
+                       Pending
+                     </span>
+                   )}
+                   {user.linkingStatus === 'approved' && (
+                     <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 text-[7px] rounded uppercase font-black">
+                       Linked
+                     </span>
+                   )}
+                   {user.linkingStatus === 'declined' && (
+                     <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 text-[7px] rounded uppercase font-black">
+                       Declined
+                     </span>
+                   )}
+                 </button>
+               )}
                <button 
                  onClick={() => setIsSettingsOpen(true)}
                  className="w-full py-3 rounded-xl bg-white/5 border border-white/5 font-bold text-[11px] hover:bg-white/10 transition-all text-gray-300"

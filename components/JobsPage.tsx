@@ -171,6 +171,19 @@ const JobsPage: React.FC<JobsPageProps> = ({ onBack, user, onJobSuccess, onGoToU
       alert("You have already completed this job!");
       return;
     }
+
+    const userLevel = user.level || 1;
+    const joinedCount = appliedJobIds.length;
+
+    if (userLevel === 2 && joinedCount >= 2) {
+      alert("SECURITY BLOCK: Level 2 validator nodes can only join a maximum of 2 jobs. Please upgrade your level to unlock unlimited jobs!");
+      return;
+    }
+    if (userLevel === 3 && joinedCount >= 3) {
+      alert("SECURITY BLOCK: Level 3 master-nodes can only join a maximum of 3 jobs. Please upgrade your level to unlock unlimited jobs!");
+      return;
+    }
+
     setSelectedJob(job);
     setApplicantAge('');
     setCustomAmount(job.basePay.toString());

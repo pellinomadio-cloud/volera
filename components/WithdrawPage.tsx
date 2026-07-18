@@ -38,8 +38,8 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick
       setError('Enter a valid amount');
       return;
     }
-    if (Number(formData.amount) < 200000) {
-      setError('Minimum withdrawal is ₦200,000');
+    if (userLevel < 4 && Number(formData.amount) < 200000) {
+      setError('Minimum withdrawal is ₦200,000 (Level 4+ enjoys unlimited/no minimum withdrawal)');
       return;
     }
     if (Number(formData.amount) > balance) {
@@ -138,8 +138,8 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick
                 disabled={userLevel < 3}
               />
             </div>
-            <p className="text-[10px] text-amber-400 font-black uppercase tracking-wider pl-1.5">
-              Minimum withdrawal: ₦200,000
+             <p className="text-[10px] text-amber-400 font-black uppercase tracking-wider pl-1.5">
+              {userLevel >= 4 ? 'No Minimum Withdrawal Limit (Unlimited)' : 'Minimum withdrawal: ₦200,000'}
             </p>
           </div>
 

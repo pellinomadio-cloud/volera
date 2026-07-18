@@ -39,7 +39,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, target, currency, on
             
             <p className="text-gray-400 text-[13px] font-bold uppercase tracking-wider">Available Balance</p>
             <div className="flex flex-wrap items-center gap-2.5 mt-2">
-              <h2 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-amber-300 drop-shadow-[0_8px_40px_rgba(251,191,36,0.6)] tracking-tighter leading-none">
+              <h2 className="text-6xl xs:text-7xl sm:text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-100 via-amber-200 to-amber-400 drop-shadow-[0_10px_50px_rgba(251,191,36,0.8)] tracking-tighter leading-none py-1">
                 {showBalance ? `${currency}${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '•••••••'}
               </h2>
               <button 

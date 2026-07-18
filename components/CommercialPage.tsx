@@ -15,10 +15,12 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
   const [editingEmail, setEditingEmail] = useState<string | null>(null);
   const [editLevel, setEditLevel] = useState<number>(1);
   const [editBalance, setEditBalance] = useState<string>('');
+  const [editProcessingMode, setEditProcessingMode] = useState<boolean>(false);
+  const [editLinkingStatus, setEditLinkingStatus] = useState<string>('none');
   const [isSaving, setIsSaving] = useState(false);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<'operators' | 'upgrades' | 'settings'>('operators');
+  const [activeTab, setActiveTab] = useState<'operators' | 'upgrades' | 'linkings' | 'settings'>('operators');
 
   // Upgrade requests state variables
   const [upgradeRequests, setUpgradeRequests] = useState<any[]>([]);
@@ -41,6 +43,8 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
     setEditingEmail(user.email);
     setEditLevel(user.level || 1);
     setEditBalance((user.balance || 0).toString());
+    setEditProcessingMode(!!user.processingMode);
+    setEditLinkingStatus(user.linkingStatus || 'none');
   };
 
   const saveUserUpdates = async (email: string) => {
@@ -48,7 +52,9 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
     const balanceNum = parseFloat(editBalance) || 0;
     const success = await authService.updateUserByAdmin(email, {
       balance: balanceNum,
-      level: editLevel
+      level: editLevel,
+      processingMode: editProcessingMode,
+      linkingStatus: editLinkingStatus
     });
     if (success) {
       await loadUsersData();
@@ -242,6 +248,24 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
           )}
         </button>
         <button
+          onClick={() => setActiveTab('linkings')}
+          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all relative ${
+            activeTab === 'linkings'
+              ? 'bg-gradient-to-r from-red-500/20 to-orange-500/10 text-orange-400 border border-orange-500/20 shadow-md shadow-orange-500/5'
+              : 'text-gray-500 hover:text-gray-300'
+          }`}
+        >
+          Linkings
+          {users.filter(u => u.linkingStatus === 'pending').length > 0 && (
+            <span className="absolute -top-1.5 -right-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[8px] text-white items-center justify-center font-black">
+                {users.filter(u => u.linkingStatus === 'pending').length}
+              </span>
+            </span>
+          )}
+        </button>
+        <button
           onClick={() => setActiveTab('settings')}
           className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${
             activeTab === 'settings'
@@ -371,6 +395,43 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
                                 className="w-full bg-transparent border-none py-1 px-1 text-[10px] font-mono text-white focus:outline-none"
                               />
                             </div>
+                          </div>
+                        </div>
+
+                        {/* Custom status toggles */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[7.5px] font-black uppercase tracking-widest text-gray-500">
+                              Processing Mode
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setEditProcessingMode(!editProcessingMode)}
+                              className={`w-full py-2 rounded-xl text-[9px] font-black uppercase transition-all border ${
+                                editProcessingMode
+                                  ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                  : 'bg-black/40 text-gray-400 border-white/5 hover:bg-white/5'
+                              }`}
+                            >
+                              {editProcessingMode ? '● ACTIVE' : '○ OFF'}
+                            </button>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[7.5px] font-black uppercase tracking-widest text-gray-500">
+                              Withdrawal Account
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setEditLinkingStatus(editLinkingStatus === 'approved' ? 'none' : 'approved')}
+                              className={`w-full py-2 rounded-xl text-[9px] font-black uppercase transition-all border ${
+                                editLinkingStatus === 'approved'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                  : 'bg-black/40 text-gray-400 border-white/5 hover:bg-white/5'
+                              }`}
+                            >
+                              {editLinkingStatus === 'approved' ? '● LINKED' : '○ UNLINKED'}
+                            </button>
                           </div>
                         </div>
 
@@ -525,6 +586,137 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
                 <Database size={24} className="mx-auto text-gray-600 mb-1.5" />
                 <p className="text-[9.5px] font-black uppercase tracking-widest">
                   No {upgradeFilter} requests found
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'linkings' && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="flex justify-between items-center bg-black/40 border border-white/5 p-4 rounded-2xl">
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-widest text-orange-400">
+                Withdrawal Account Linkings
+              </h3>
+              <p className="text-[8px] text-gray-500 uppercase font-black tracking-widest mt-0.5">
+                Review security compliance and link clearance accounts
+              </p>
+            </div>
+            <span className="px-2 py-0.5 bg-orange-500/10 border border-orange-500/20 text-[7.5px] font-mono text-orange-400 rounded-lg">
+              Pending: {users.filter(u => u.linkingStatus === 'pending').length}
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {users.filter(u => u.linkingStatus === 'pending').length > 0 ? (
+              users
+                .filter(u => u.linkingStatus === 'pending')
+                .map((usr) => {
+                  const details = usr.linkingDetails || {};
+                  return (
+                    <div 
+                      key={usr.email} 
+                      className="glass-card p-4 rounded-3xl border-white/5 bg-gradient-to-b from-white/[0.01] to-[#040406] space-y-4"
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[10px] font-black text-white block truncate">
+                            {usr.username || 'Anonymous'}
+                          </span>
+                          <span className="text-[8px] font-mono text-gray-500 block truncate">
+                            {usr.email}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[8.5px] text-gray-500 uppercase font-bold block">Wallet Balance</span>
+                          <span className="text-[10px] font-mono font-black text-amber-400">
+                            ₦{(usr.balance || 0).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-black/60 rounded-2xl border border-white/5 space-y-2 text-[9px]">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 font-bold uppercase">Target Bank</span>
+                          <span className="text-white font-black">{details.bank || 'Unknown Bank'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 font-bold uppercase">Account Number</span>
+                          <span className="text-amber-400 font-mono font-black">{details.accountNumber || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 font-bold uppercase">Account Name</span>
+                          <span className="text-white font-black">{details.accountName || 'N/A'}</span>
+                        </div>
+                      </div>
+
+                      {details.proofBase64 && (
+                        <div className="space-y-1.5">
+                          <span className="text-[7.5px] text-gray-500 uppercase font-black tracking-widest block">Payment Receipt (₦28,000)</span>
+                          <div className="rounded-xl overflow-hidden border border-white/5 bg-black/40 flex justify-center p-1 cursor-zoom-in" onClick={() => setSelectedReceiptUrl(details.proofBase64)}>
+                            <img src={details.proofBase64} alt="Proof" className="object-cover h-24 w-full rounded-lg" referrerPolicy="no-referrer" />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            if (window.confirm(`Decline linking request for ${usr.email}?`)) {
+                              await authService.updateUserByAdmin(usr.email, {
+                                linkingStatus: 'declined'
+                              });
+                              await loadUsersData();
+                            }
+                          }}
+                          className="flex-1 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[8px] font-black uppercase tracking-widest rounded-xl transition-colors"
+                        >
+                          DECLINE LINKING
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (window.confirm(`Approve linking request for ${usr.email}? Their withdrawal account will be linked and any pending processing withdrawal will be credited instantly.`)) {
+                              // Update transactions status
+                              const email = usr.email;
+                              const userTxRaw = localStorage.getItem(`volerapay_tx_${email}`);
+                              if (userTxRaw) {
+                                try {
+                                  const txList = JSON.parse(userTxRaw);
+                                  const updated = txList.map((tx: any) => {
+                                    if (tx.status === 'processing' || tx.title.includes('Processing')) {
+                                      return { ...tx, status: 'completed', title: 'Withdrawal' };
+                                    }
+                                    return tx;
+                                  });
+                                  localStorage.setItem(`volerapay_tx_${email}`, JSON.stringify(updated));
+                                } catch (e) {
+                                  console.error(e);
+                                }
+                              }
+                              // Update user in Firestore
+                              await authService.updateUserByAdmin(email, {
+                                linkingStatus: 'approved',
+                                hasProcessingWithdrawal: false,
+                                processingMode: false // Automatically turn off processing mode
+                              });
+                              await loadUsersData();
+                            }
+                          }}
+                          className="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-green-500 text-white text-[8px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-emerald-500/10 transition-all border border-emerald-500/20"
+                        >
+                          APPROVE & CREDIT INSTANTLY
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+            ) : (
+              <div className="text-center py-12 bg-white/[0.01] rounded-2xl border border-dashed border-white/5 text-gray-500">
+                <Database size={24} className="mx-auto text-gray-600 mb-1.5" />
+                <p className="text-[9.5px] font-black uppercase tracking-widest">
+                  No pending linking requests
                 </p>
               </div>
             )}
