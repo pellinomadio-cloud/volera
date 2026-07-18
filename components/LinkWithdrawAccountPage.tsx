@@ -23,6 +23,7 @@ export const LinkWithdrawAccountPage: React.FC<LinkWithdrawAccountPageProps> = (
   });
   const [error, setError] = useState('');
   const [copiedText, setCopiedText] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofBase64, setProofBase64] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,6 +72,7 @@ export const LinkWithdrawAccountPage: React.FC<LinkWithdrawAccountPageProps> = (
   const handleCopyAccount = () => {
     navigator.clipboard.writeText(companySettings.accountNumber);
     setCopiedText(true);
+    setShowWarningModal(true);
     setTimeout(() => setCopiedText(false), 2000);
   };
 
@@ -345,6 +347,46 @@ export const LinkWithdrawAccountPage: React.FC<LinkWithdrawAccountPageProps> = (
               'SUBMIT PAYMENT PROOF & LINK ACCOUNT'
             )}
           </button>
+        </div>
+      )}
+
+      {/* OPay / PalmPay Warning Modal */}
+      {showWarningModal && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn" id="link-warning-modal">
+          <div className="bg-[#0f0404] border border-red-500/30 rounded-[2rem] p-6 max-w-sm w-full space-y-4 shadow-2xl shadow-red-500/10 text-white">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mx-auto animate-bounce">
+              <AlertCircle size={24} />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-sm font-black uppercase tracking-wider text-red-500">
+                Critical Payment Warning!
+              </h3>
+              <p className="text-[10.5px] text-gray-300 leading-relaxed font-semibold">
+                You have copied the company account number. Please follow this safety rule carefully:
+              </p>
+              <div className="bg-red-500/5 rounded-2xl p-3 border border-red-500/10 text-[9.5px] text-gray-300 leading-relaxed space-y-1.5 text-left">
+                <p className="font-bold text-red-400 uppercase tracking-wider">
+                  ⚠️ DO NOT PAY WITH OPAY OR PALMPAY
+                </p>
+                <p>
+                  OPay and PalmPay transfers are currently restricted and will <strong className="text-white">NOT</strong> be processed or credited to your balance.
+                </p>
+                <p className="text-emerald-400 font-bold uppercase tracking-wider">
+                  ✓ OTHER BANKS ARE FULLY ALLOWED:
+                </p>
+                <p className="text-gray-400">
+                  You can pay using GTBank, Access Bank, Zenith Bank, Kuda, Moniepoint, or any other licensed commercial banks.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowWarningModal(false)}
+              className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-red-600/25"
+              id="link-warning-dismiss"
+            >
+              I Understand
+            </button>
+          </div>
         </div>
       )}
     </div>
