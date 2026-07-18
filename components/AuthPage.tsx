@@ -79,12 +79,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
           return;
         }
 
-        // New user registration defaults to 0.0 Naira
+        // New user registration defaults to 4,500 Naira welcome reward
         const newUser = {
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          balance: 0.0, // Strict requirement: 0.0 Naira on registration
+          balance: 4500.0, // 4,500 Naira reward on registration
           referrals: [],
           createdAt: new Date().toISOString()
         };

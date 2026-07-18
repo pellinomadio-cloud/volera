@@ -876,18 +876,19 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
                                 const email = req.email;
                                 const userTxRaw = localStorage.getItem(`volerapay_tx_${email}`);
                                 const newTx = {
-                                  id: `dep_${Date.now()}`,
+                                  id: req.id,
                                   title: 'Wallet Funded',
                                   date: 'Today',
                                   category: 'Funding',
-                                  amount: `+₦${req.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+                                  amount: req.amount,
                                   type: 'credit',
                                   status: 'completed'
                                 };
                                 if (userTxRaw) {
                                   try {
                                     const txList = JSON.parse(userTxRaw);
-                                    localStorage.setItem(`volerapay_tx_${email}`, JSON.stringify([newTx, ...txList]));
+                                    const filteredList = txList.filter((tx: any) => tx.id !== req.id);
+                                    localStorage.setItem(`volerapay_tx_${email}`, JSON.stringify([newTx, ...filteredList]));
                                   } catch (e) {
                                     console.error(e);
                                   }

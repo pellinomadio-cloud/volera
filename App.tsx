@@ -44,6 +44,60 @@ const App: React.FC = () => {
   const [supportTelegramUrl, setSupportTelegramUrl] = useState('https://t.me/novapay999');
   const [showTelegramModal, setShowTelegramModal] = useState(false);
 
+  const syncTransactionsWithDeposits = async (email: string) => {
+    try {
+      const savedTxRaw = localStorage.getItem(`volerapay_tx_${email}`);
+      let currentTxs: Transaction[] = [];
+      if (savedTxRaw) {
+        currentTxs = JSON.parse(savedTxRaw);
+      } else {
+        currentTxs = INITIAL_TRANSACTIONS;
+      }
+
+      const deposits = await authService.getDepositRequests();
+      const userDeposits = deposits.filter(d => d.email?.toLowerCase() === email.toLowerCase());
+      
+      let mergedTxs = [...currentTxs];
+      let changed = false;
+
+      userDeposits.forEach(dep => {
+        const existsIdx = mergedTxs.findIndex(tx => tx.id === dep.id);
+        const expectedStatus = dep.status === 'approved' ? 'completed' : dep.status === 'declined' ? 'failed' : 'pending';
+        
+        if (existsIdx === -1) {
+          const newTx: Transaction = {
+            id: dep.id,
+            title: dep.status === 'approved' ? 'Wallet Funded' : dep.status === 'declined' ? 'Deposit Declined' : 'Deposit Processing',
+            date: dep.submittedAt ? new Date(dep.submittedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : 'Today',
+            category: 'Funding',
+            amount: dep.amount,
+            type: 'credit',
+            status: expectedStatus
+          };
+          mergedTxs = [newTx, ...mergedTxs];
+          changed = true;
+        } else {
+          const existingTx = mergedTxs[existsIdx];
+          if (existingTx.status !== expectedStatus) {
+            mergedTxs[existsIdx] = {
+              ...existingTx,
+              title: dep.status === 'approved' ? 'Wallet Funded' : dep.status === 'declined' ? 'Deposit Declined' : 'Deposit Processing',
+              status: expectedStatus
+            };
+            changed = true;
+          }
+        }
+      });
+
+      if (changed) {
+        setTransactions(mergedTxs);
+        localStorage.setItem(`volerapay_tx_${email}`, JSON.stringify(mergedTxs));
+      }
+    } catch (e) {
+      console.error("Error syncing transactions with deposits:", e);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       const isJustRegistered = localStorage.getItem('volerapay_just_registered') === 'true';
@@ -125,6 +179,11 @@ const App: React.FC = () => {
             // Update active session storage cache
             localStorage.setItem('volerapay_user', JSON.stringify(matched));
           }
+        }
+        
+        // Always sync deposit requests with transaction history
+        if (user?.email) {
+          await syncTransactionsWithDeposits(user.email);
         }
       } catch (err) {
         console.error("Profile periodic sync error:", err);
@@ -252,7 +311,7 @@ const App: React.FC = () => {
         setTransactions(JSON.parse(savedTxRaw));
       } else {
         // If they are a pre-existing user with a 200,000 balance, keep initial transactions
-        if (userBalance > 0) {
+        if (userBalance > 4500) {
           setTransactions(INITIAL_TRANSACTIONS);
           localStorage.setItem(`volerapay_tx_${savedUser.email}`, JSON.stringify(INITIAL_TRANSACTIONS));
         } else {
@@ -264,11 +323,24 @@ const App: React.FC = () => {
               category: 'System',
               amount: 0,
               type: 'credit'
+            },
+            {
+              id: 'reg-reward',
+              title: 'Registration Reward',
+              date: 'Today',
+              category: 'Reward',
+              amount: 4500,
+              type: 'credit'
             }
           ];
           setTransactions(initTx);
           localStorage.setItem(`volerapay_tx_${savedUser.email}`, JSON.stringify(initTx));
         }
+      }
+
+      // Sync transactions with deposit requests in Firestore
+      if (savedUser.email) {
+        syncTransactionsWithDeposits(savedUser.email);
       }
     }
   }, []);
@@ -290,12 +362,12 @@ const App: React.FC = () => {
     setUser(profile);
     setIsAuthenticated(true);
     
-    // Check if transactions exist or write a new one for new user starting at 0.0
+    // Check if transactions exist or write a new one for new user starting at 4500
     const savedTxRaw = localStorage.getItem(`volerapay_tx_${userData.email}`);
     if (savedTxRaw) {
       setTransactions(JSON.parse(savedTxRaw));
     } else {
-      if (userBalance === 0.0 || userBalance === 0) {
+      if (userBalance <= 4500) {
         const initTx: Transaction[] = [
           {
             id: 'init-activation',
@@ -303,6 +375,14 @@ const App: React.FC = () => {
             date: 'Today',
             category: 'System',
             amount: 0,
+            type: 'credit'
+          },
+          {
+            id: 'reg-reward',
+            title: 'Registration Reward',
+            date: 'Today',
+            category: 'Reward',
+            amount: 4500,
             type: 'credit'
           }
         ];
@@ -312,6 +392,10 @@ const App: React.FC = () => {
         setTransactions(INITIAL_TRANSACTIONS);
         localStorage.setItem(`volerapay_tx_${userData.email}`, JSON.stringify(INITIAL_TRANSACTIONS));
       }
+    }
+
+    if (userData.email) {
+      syncTransactionsWithDeposits(userData.email);
     }
   };
 
