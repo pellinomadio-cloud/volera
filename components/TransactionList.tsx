@@ -51,7 +51,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, currenc
                   <div>
                     <div className="flex items-center gap-1">
                       <p className="text-xs font-bold text-white">{tx.title}</p>
-                      <ShieldCheck size={11} className="text-emerald-500" />
+                      {tx.status !== 'processing' && <ShieldCheck size={11} className="text-emerald-500" />}
                     </div>
                     <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wide mt-0.5">{tx.date} • {tx.category}</p>
                   </div>
@@ -61,7 +61,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, currenc
                   <p className={`text-xs font-black font-mono tracking-tight ${isCredit ? 'text-blue-400' : 'text-amber-400'}`}>
                     {isCredit ? '+' : '-'}{currency}{tx.amount.toLocaleString()}
                   </p>
-                  <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">SUCCESS</span>
+                  {tx.status === 'processing' ? (
+                    <span className="text-[9px] text-amber-500 font-black uppercase tracking-widest animate-pulse flex items-center justify-end gap-1">
+                      <span className="w-1 h-1 rounded-full bg-amber-500"></span>
+                      PROCESSING
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">SUCCESS</span>
+                  )}
                 </div>
               </motion.div>
             );

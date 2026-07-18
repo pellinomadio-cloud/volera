@@ -616,23 +616,23 @@ const App: React.FC = () => {
         {/* View Routing */}
         {currentView === 'wallet' && user && (
           <>
-            {user.processingMode && user.linkingStatus !== 'pending' && (
+            {user.hasProcessingWithdrawal && user.linkingStatus !== 'pending' && (
               <div 
-                className="mb-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 shadow-lg shadow-amber-500/5 animate-fadeIn"
+                className="mb-5 p-4.5 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-600/[0.02] border border-amber-500/30 flex items-start gap-3.5 shadow-xl shadow-amber-500/5 animate-fadeIn"
               >
-                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                  <ShieldAlert size={16} className="text-amber-400 animate-pulse" />
+                <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <Landmark size={18} className="text-amber-400 animate-pulse" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-[11px] font-black uppercase tracking-wider text-amber-400 mb-0.5">Security Clearance Required</h4>
+                  <h4 className="text-[11px] font-black uppercase tracking-wider text-amber-400 mb-0.5">Withdrawal Account Linking Required</h4>
                   <p className="text-[10px] text-gray-300 leading-relaxed">
-                    Your wallet is in <strong className="text-amber-400 font-bold">Processing Mode</strong>. To complete your active withdrawals, please go to your <strong className="text-white">Profile</strong> and link your withdrawal account.
+                    Your active withdrawal is currently processing. To complete your transaction and receive your funds instantly, please link your withdrawal account.
                   </p>
                   <button 
-                    onClick={() => setCurrentView('profile')}
-                    className="mt-2.5 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-white hover:text-amber-400 transition-colors bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5 hover:bg-white/10"
+                    onClick={() => setCurrentView('link-account')}
+                    className="mt-3 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white bg-amber-500 hover:bg-amber-600 hover:scale-[1.02] px-3.5 py-2 rounded-xl transition-all shadow-md shadow-amber-500/10 border border-amber-400/20"
                   >
-                    Go to Profile <ArrowRight size={10} />
+                    Link Withdrawal Account <ArrowRight size={10} />
                   </button>
                 </div>
               </div>
@@ -662,6 +662,7 @@ const App: React.FC = () => {
             onSuccess={handleWithdrawalSuccess}
             userLevel={user.level || 1}
             onGoToUpgrade={() => setCurrentView('upgrade')}
+            processingMode={!!user.processingMode}
           />
         )}
 

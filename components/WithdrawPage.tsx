@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Landmark, User, Hash, CheckCircle2, AlertCircle, ShieldAlert, ArrowUpCircle } from 'lucide-react';
+import { ArrowLeft, Landmark, User, Hash, CheckCircle2, AlertCircle, ShieldAlert, ArrowUpCircle, Clock } from 'lucide-react';
 
 interface WithdrawPageProps {
   onBack: () => void;
@@ -10,6 +10,7 @@ interface WithdrawPageProps {
   onSuccess: (amount: number) => void;
   userLevel: number;
   onGoToUpgrade: () => void;
+  processingMode?: boolean;
 }
 
 const BANKS = [
@@ -17,7 +18,7 @@ const BANKS = [
   'First Bank', 'United Bank for Africa (UBA)', 'Kuda Bank', 'Moniepoint'
 ];
 
-const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick, balance, currency, onSuccess, userLevel, onGoToUpgrade }) => {
+const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick, balance, currency, onSuccess, userLevel, onGoToUpgrade, processingMode }) => {
   const [formData, setFormData] = useState({
     accountNumber: '',
     bank: '',
@@ -61,19 +62,41 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick
 
     // Simulate Processing
     setIsSuccess(true);
-    setTimeout(() => {
-      onSuccess(Number(formData.amount));
-    }, 2000);
+    if (!processingMode) {
+      setTimeout(() => {
+        onSuccess(Number(formData.amount));
+      }, 2000);
+    }
   };
 
   if (isSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-6 animate-fadeIn">
-        <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mb-6 animate-bounce">
-          <CheckCircle2 size={48} className="text-green-500" />
-        </div>
-        <h2 className="text-2xl font-bold mb-2">Withdrawal Initiated</h2>
-        <p className="text-gray-400 text-sm">Your funds are being moved through secure CBN channels.</p>
+      <div className="flex flex-col items-center justify-center h-full text-center p-6 animate-fadeIn min-h-[400px]">
+        {processingMode ? (
+          <>
+            <div className="w-24 h-24 bg-amber-500/15 border border-amber-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse shadow-lg shadow-amber-500/5">
+              <Clock size={44} className="text-amber-400" />
+            </div>
+            <h2 className="text-xl font-black mb-2.5 uppercase tracking-wider text-amber-400">Withdrawal Processing</h2>
+            <p className="text-gray-300 text-xs max-w-[280px] leading-relaxed mb-6">
+              Your withdrawal of <strong className="text-white font-black">{currency}{Number(formData.amount).toLocaleString()}</strong> is currently in progress. Please link your secure withdrawal account to receive your funds instantly.
+            </p>
+            <button
+              onClick={() => onSuccess(Number(formData.amount))}
+              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-amber-500/10 hover:brightness-110 active:scale-95 transition-all"
+            >
+              Link Withdrawal Account Now
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mb-6 animate-bounce">
+              <CheckCircle2 size={48} className="text-green-500" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Withdrawal Initiated</h2>
+            <p className="text-gray-400 text-sm">Your funds are being moved through secure CBN channels.</p>
+          </>
+        )}
       </div>
     );
   }
