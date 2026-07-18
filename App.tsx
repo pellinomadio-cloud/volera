@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Menu, User, ShieldCheck, Loader2, Smartphone, X, Check, Award, ArrowRight, MessageCircle, ShieldAlert, Landmark } from 'lucide-react';
+import { Bell, Menu, User, ShieldCheck, Loader2, Smartphone, X, Check, Award, ArrowRight, MessageCircle, ShieldAlert, Landmark, Send } from 'lucide-react';
 import { INITIAL_TRANSACTIONS, WITHDRAWAL_ALERTS } from './constants';
 import { View, Transaction, UserProfile } from './types';
 import { authService } from './services/authService';
@@ -41,6 +41,16 @@ const App: React.FC = () => {
 
   // App Support Link state
   const [supportTelegramUrl, setSupportTelegramUrl] = useState('https://t.me/novapay999');
+  const [showTelegramModal, setShowTelegramModal] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const isJustRegistered = localStorage.getItem('volerapay_just_registered') === 'true';
+      if (isJustRegistered) {
+        setShowTelegramModal(true);
+      }
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const fetchSupportLink = async () => {
@@ -933,11 +943,64 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {showTelegramModal && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[300] flex items-center justify-center p-6 animate-fadeIn">
+          <div className="bg-zinc-950 border border-white/10 rounded-[2.5rem] p-7 text-center relative max-w-sm w-full shadow-2xl overflow-hidden animate-scaleUp">
+            {/* Ambient background glow */}
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full bg-blue-500/10 blur-[50px] pointer-events-none"></div>
+            
+            {/* Elegant Header Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/20 border border-blue-400/20 relative">
+              <Send size={24} className="text-white rotate-[-15deg] translate-x-[-2px] translate-y-[1px]" />
+              <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500"></span>
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h3 className="text-base font-black tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-blue-400 mb-2">
+              Join Our Telegram
+            </h3>
+            
+            {/* Text description */}
+            <p className="text-[11px] text-gray-400 leading-relaxed mb-6 font-medium">
+              Welcome to Volerapay! Stay connected with our official Telegram channel for live payment updates, node network security alerts, exclusive system bonuses, and 24/7 dedicated community support.
+            </p>
+
+            {/* Actions */}
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  window.open(supportTelegramUrl, '_blank', 'noopener,noreferrer');
+                }}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-indigo-600 hover:brightness-110 text-white font-black text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-blue-500/10 border border-blue-400/20 flex items-center justify-center gap-2"
+              >
+                <Send size={14} className="rotate-[-15deg] translate-y-[-1px]" />
+                Join Channel Now
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowTelegramModal(false);
+                  localStorage.removeItem('volerapay_just_registered');
+                }}
+                className="w-full py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white font-bold text-[10px] uppercase tracking-wider transition-colors border border-white/5"
+              >
+                Continue to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleUp { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
         .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
         .animate-slideDown { animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-scaleUp { animation: scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         button, input, select {
           font-size: 11px !important;
