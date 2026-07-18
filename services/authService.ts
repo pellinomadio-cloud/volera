@@ -446,5 +446,138 @@ export const authService = {
       return latestPending;
     }
     return null;
+  },
+
+  // Deposit handling via Firebase Firestore & localStorage
+  getDepositsSync: (): any[] => {
+    const raw = localStorage.getItem('volerapay_deposit_requests');
+    return raw ? JSON.parse(raw) : [];
+  },
+
+  submitDepositRequest: async (request: {
+    email: string;
+    username: string;
+    amount: number;
+    proofBase64: string;
+  }): Promise<boolean> => {
+    try {
+      const requestId = `dep_${request.email.toLowerCase()}_${Date.now()}`;
+      const docRef = doc(db, 'depositRequests', requestId);
+      const reqDoc = {
+        id: requestId,
+        email: request.email.toLowerCase(),
+        username: request.username,
+        amount: request.amount,
+        proofBase64: request.proofBase64,
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+        handledAt: null
+      };
+      await setDoc(docRef, reqDoc);
+
+      // Save to local storage for caching
+      const requests = authService.getDepositsSync();
+      requests.push(reqDoc);
+      localStorage.setItem('volerapay_deposit_requests', JSON.stringify(requests));
+      return true;
+    } catch (err) {
+      console.error("Firestore submitDepositRequest error:", err);
+      // Fallback
+      try {
+        const reqDoc = {
+          id: `dep_${request.email.toLowerCase()}_${Date.now()}`,
+          email: request.email.toLowerCase(),
+          username: request.username,
+          amount: request.amount,
+          proofBase64: request.proofBase64,
+          status: 'pending',
+          submittedAt: new Date().toISOString(),
+          handledAt: null
+        };
+        const requests = authService.getDepositsSync();
+        requests.push(reqDoc);
+        localStorage.setItem('volerapay_deposit_requests', JSON.stringify(requests));
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+  },
+
+  getDepositRequests: async (): Promise<any[]> => {
+    try {
+      const col = collection(db, 'depositRequests');
+      const snap = await getDocs(col);
+      const list: any[] = [];
+      snap.forEach((doc) => {
+        list.push(doc.data());
+      });
+      if (list.length > 0) {
+        localStorage.setItem('volerapay_deposit_requests', JSON.stringify(list));
+        return list;
+      }
+    } catch (err) {
+      console.error("Firestore getDepositRequests error:", err);
+    }
+    return authService.getDepositsSync();
+  },
+
+  updateDepositRequestStatus: async (requestId: string, status: 'approved' | 'declined', email: string, amount: number): Promise<boolean> => {
+    try {
+      const docRef = doc(db, 'depositRequests', requestId);
+      const now = new Date().toISOString();
+      await setDoc(docRef, { status, handledAt: now }, { merge: true });
+
+      // Update in local cache
+      const requests = authService.getDepositsSync();
+      const idx = requests.findIndex(r => r.id === requestId);
+      if (idx >= 0) {
+        requests[idx].status = status;
+        requests[idx].handledAt = now;
+        localStorage.setItem('volerapay_deposit_requests', JSON.stringify(requests));
+      }
+
+      // If approved, update user's balance
+      if (status === 'approved') {
+        const usersList = await authService.getUsers();
+        const usr = usersList.find(u => u.email.toLowerCase() === email.toLowerCase());
+        const currentBalance = usr ? (usr.balance || 0) : 0;
+        const newBalance = currentBalance + amount;
+        await authService.updateUserByAdmin(email, { balance: newBalance });
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Firestore updateDepositRequestStatus error, using local fallback:", err);
+      // Fallback
+      const requests = authService.getDepositsSync();
+      const idx = requests.findIndex(r => r.id === requestId);
+      if (idx >= 0) {
+        requests[idx].status = status;
+        requests[idx].handledAt = new Date().toISOString();
+        localStorage.setItem('volerapay_deposit_requests', JSON.stringify(requests));
+        
+        if (status === 'approved') {
+          const usersList = authService.getUsersSync();
+          const usr = usersList.find(u => u.email.toLowerCase() === email.toLowerCase());
+          const currentBalance = usr ? (usr.balance || 0) : 0;
+          const newBalance = currentBalance + amount;
+          await authService.updateUserByAdmin(email, { balance: newBalance });
+        }
+        return true;
+      }
+      return false;
+    }
+  },
+
+  getActivePendingDepositRequest: async (email: string): Promise<any | null> => {
+    const requests = await authService.getDepositRequests();
+    const userPending = requests.filter(r => r.email.toLowerCase() === email.toLowerCase() && r.status === 'pending');
+    
+    if (userPending.length === 0) return null;
+
+    // Sort by submittedAt descending to find the latest
+    userPending.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+    return userPending[0];
   }
 };

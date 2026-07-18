@@ -27,7 +27,7 @@ export interface UserProfile {
   hasProcessingWithdrawal?: boolean;
 }
 
-export type View = 'wallet' | 'history' | 'profile' | 'explore' | 'withdraw' | 'my-jobs' | 'community' | 'notifications' | 'invite' | 'free-withdraw' | 'jobs' | 'upgrade' | 'commercial' | 'games' | 'link-account';
+export type View = 'wallet' | 'history' | 'profile' | 'explore' | 'withdraw' | 'deposit' | 'my-jobs' | 'community' | 'notifications' | 'invite' | 'free-withdraw' | 'jobs' | 'upgrade' | 'commercial' | 'games' | 'link-account';
 
 export interface Testimonial {
   id: string;

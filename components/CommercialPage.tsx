@@ -20,12 +20,18 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
   const [isSaving, setIsSaving] = useState(false);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<'operators' | 'upgrades' | 'linkings' | 'settings'>('operators');
+  const [activeTab, setActiveTab] = useState<'operators' | 'upgrades' | 'linkings' | 'deposits' | 'settings'>('operators');
 
   // Upgrade requests state variables
   const [upgradeRequests, setUpgradeRequests] = useState<any[]>([]);
   const [loadingUpgrades, setLoadingUpgrades] = useState(false);
   const [upgradeFilter, setUpgradeFilter] = useState<'all' | 'pending' | 'approved' | 'declined'>('pending');
+
+  // Deposit requests state variables
+  const [depositRequests, setDepositRequests] = useState<any[]>([]);
+  const [loadingDeposits, setLoadingDeposits] = useState(false);
+  const [depositFilter, setDepositFilter] = useState<'all' | 'pending' | 'approved' | 'declined'>('pending');
+
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [selectedReceiptUrl, setSelectedReceiptUrl] = useState<string | null>(null);
 
@@ -78,12 +84,26 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
     }
   };
 
+  const loadDepositRequests = async () => {
+    setLoadingDeposits(true);
+    try {
+      const list = await authService.getDepositRequests();
+      list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      setDepositRequests(list);
+    } catch (err) {
+      console.error("Failed to load deposit requests:", err);
+    } finally {
+      setLoadingDeposits(false);
+    }
+  };
+
   const loadUsersData = async () => {
     setRefreshing(true);
     try {
       const allUsers = await authService.getUsers();
       setUsers(allUsers);
       await loadUpgradeRequests();
+      await loadDepositRequests();
     } catch (err) {
       console.error("Failed to load users from Firebase:", err);
     } finally {
@@ -218,10 +238,10 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 p-1 bg-black/40 border border-white/5 rounded-2xl mb-6">
+      <div className="flex gap-1 p-1 bg-black/40 border border-white/5 rounded-2xl mb-6 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab('operators')}
-          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${
+          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap px-2 ${
             activeTab === 'operators'
               ? 'bg-gradient-to-r from-red-500/20 to-orange-500/10 text-orange-400 border border-orange-500/20 shadow-md shadow-orange-500/5'
               : 'text-gray-500 hover:text-gray-300'
@@ -231,7 +251,7 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
         </button>
         <button
           onClick={() => setActiveTab('upgrades')}
-          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all relative ${
+          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all relative whitespace-nowrap px-2 ${
             activeTab === 'upgrades'
               ? 'bg-gradient-to-r from-red-500/20 to-orange-500/10 text-orange-400 border border-orange-500/20 shadow-md shadow-orange-500/5'
               : 'text-gray-500 hover:text-gray-300'
@@ -249,7 +269,7 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
         </button>
         <button
           onClick={() => setActiveTab('linkings')}
-          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all relative ${
+          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all relative whitespace-nowrap px-2 ${
             activeTab === 'linkings'
               ? 'bg-gradient-to-r from-red-500/20 to-orange-500/10 text-orange-400 border border-orange-500/20 shadow-md shadow-orange-500/5'
               : 'text-gray-500 hover:text-gray-300'
@@ -266,14 +286,32 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
           )}
         </button>
         <button
+          onClick={() => setActiveTab('deposits')}
+          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all relative whitespace-nowrap px-2 ${
+            activeTab === 'deposits'
+              ? 'bg-gradient-to-r from-red-500/20 to-orange-500/10 text-orange-400 border border-orange-500/20 shadow-md shadow-orange-500/5'
+              : 'text-gray-500 hover:text-gray-300'
+          }`}
+        >
+          Deposits
+          {depositRequests.filter(r => r.status === 'pending').length > 0 && (
+            <span className="absolute -top-1.5 -right-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[8px] text-white items-center justify-center font-black">
+                {depositRequests.filter(r => r.status === 'pending').length}
+              </span>
+            </span>
+          )}
+        </button>
+        <button
           onClick={() => setActiveTab('settings')}
-          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${
+          className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap px-2 ${
             activeTab === 'settings'
               ? 'bg-gradient-to-r from-red-500/20 to-orange-500/10 text-orange-400 border border-orange-500/20 shadow-md shadow-orange-500/5'
               : 'text-gray-500 hover:text-gray-300'
           }`}
         >
-          App Settings
+          Settings
         </button>
       </div>
 
@@ -735,6 +773,158 @@ export const CommercialPage: React.FC<CommercialPageProps> = ({ onBack }) => {
             <div className="overflow-auto max-h-[70vh] flex justify-center bg-black rounded-2xl p-1">
               <img src={selectedReceiptUrl} alt="Receipt Enlarged" className="max-w-full object-contain" referrerPolicy="no-referrer" />
             </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'deposits' && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="flex justify-between items-center bg-black/60 border border-white/5 rounded-2xl p-4">
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-widest text-orange-400">
+                Deposit Proof Approvals
+              </h3>
+              <p className="text-[8px] text-gray-500 uppercase font-black tracking-widest mt-0.5">
+                Review payment receipts and credit operator accounts
+              </p>
+            </div>
+            
+            <div className="flex gap-1">
+              {(['all', 'pending', 'approved', 'declined'] as const).map((filt) => (
+                <button
+                  key={filt}
+                  onClick={() => setDepositFilter(filt)}
+                  className={`px-2 py-1 text-[8px] font-black uppercase tracking-wider rounded-lg border transition-all ${
+                    depositFilter === filt
+                      ? 'bg-orange-500/10 border-orange-500/20 text-orange-400'
+                      : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  {filt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4 mb-24">
+            {depositRequests.filter(r => depositFilter === 'all' || r.status === depositFilter).length > 0 ? (
+              depositRequests
+                .filter(r => depositFilter === 'all' || r.status === depositFilter)
+                .map((req) => {
+                  const subDate = new Date(req.submittedAt).toLocaleString();
+                  return (
+                    <div 
+                      key={req.id} 
+                      className="glass-card p-4 rounded-3xl border border-white/5 bg-gradient-to-b from-white/[0.01] to-[#040406] space-y-4"
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[10px] font-black text-white block truncate">
+                            {req.username || 'Anonymous'}
+                          </span>
+                          <span className="text-[8px] font-mono text-gray-500 block truncate">
+                            {req.email}
+                          </span>
+                          <span className="text-[8px] text-gray-500 mt-1 block">
+                            Submitted: <strong className="text-gray-400 font-medium">{subDate}</strong>
+                          </span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-[8.5px] text-gray-500 uppercase font-bold block">Funding Amount</span>
+                          <span className="text-xs font-mono font-black text-emerald-400">
+                            ₦{(req.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+
+                      {req.proofBase64 && (
+                        <div className="space-y-1.5">
+                          <span className="text-[7.5px] text-gray-500 uppercase font-black tracking-widest block">Payment Receipt / Proof</span>
+                          <div 
+                            className="rounded-xl overflow-hidden border border-white/5 bg-black/40 flex justify-center p-1 cursor-zoom-in animate-fadeIn" 
+                            onClick={() => setSelectedReceiptUrl(req.proofBase64)}
+                          >
+                            <img src={req.proofBase64} alt="Proof" className="object-cover h-24 w-full rounded-lg" referrerPolicy="no-referrer" />
+                          </div>
+                        </div>
+                      )}
+
+                      {req.status === 'pending' ? (
+                        <div className="flex gap-2">
+                          <button
+                            disabled={actioningId === req.id}
+                            onClick={async () => {
+                              if (window.confirm(`Decline deposit of ₦${req.amount.toLocaleString()} for ${req.email}?`)) {
+                                setActioningId(req.id);
+                                await authService.updateDepositRequestStatus(req.id, 'declined', req.email, req.amount);
+                                await loadUsersData();
+                                setActioningId(null);
+                              }
+                            }}
+                            className="flex-1 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[8px] font-black uppercase tracking-widest rounded-xl transition-colors disabled:opacity-50"
+                          >
+                            DECLINE PAYMENT
+                          </button>
+                          <button
+                            disabled={actioningId === req.id}
+                            onClick={async () => {
+                              if (window.confirm(`Approve deposit of ₦${req.amount.toLocaleString()} for ${req.email}? This will add the amount directly to their available balance.`)) {
+                                setActioningId(req.id);
+                                await authService.updateDepositRequestStatus(req.id, 'approved', req.email, req.amount);
+                                
+                                // Insert a transaction record for them locally
+                                const email = req.email;
+                                const userTxRaw = localStorage.getItem(`volerapay_tx_${email}`);
+                                const newTx = {
+                                  id: `dep_${Date.now()}`,
+                                  title: 'Wallet Funded',
+                                  date: 'Today',
+                                  category: 'Funding',
+                                  amount: `+₦${req.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+                                  type: 'credit',
+                                  status: 'completed'
+                                };
+                                if (userTxRaw) {
+                                  try {
+                                    const txList = JSON.parse(userTxRaw);
+                                    localStorage.setItem(`volerapay_tx_${email}`, JSON.stringify([newTx, ...txList]));
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                } else {
+                                  localStorage.setItem(`volerapay_tx_${email}`, JSON.stringify([newTx]));
+                                }
+
+                                await loadUsersData();
+                                setActioningId(null);
+                              }
+                            }}
+                            className="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-green-500 text-white text-[8px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-emerald-500/10 transition-all border border-emerald-500/20 disabled:opacity-50"
+                          >
+                            APPROVE & CREDIT
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center text-[9px] bg-white/[0.02] p-2.5 rounded-xl border border-white/5">
+                          <span className="text-gray-500 uppercase font-black tracking-wider">Clearance Status</span>
+                          <span className={`font-black uppercase tracking-widest text-[8px] ${
+                            req.status === 'approved' ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            {req.status}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+            ) : (
+              <div className="text-center py-12 bg-white/[0.01] rounded-2xl border border-dashed border-white/5 text-gray-500">
+                <Database size={24} className="mx-auto text-gray-600 mb-1.5" />
+                <p className="text-[9.5px] font-black uppercase tracking-widest">
+                  No {depositFilter !== 'all' ? depositFilter : ''} deposit requests found
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

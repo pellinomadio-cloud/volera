@@ -23,6 +23,7 @@ import { LinkWithdrawAccountPage } from './components/LinkWithdrawAccountPage';
 import { SidebarDrawer } from './components/SidebarDrawer';
 import { CommercialPage } from './components/CommercialPage';
 import { GamesPage } from './components/GamesPage';
+import { DepositPage } from './components/DepositPage';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -551,7 +552,7 @@ const App: React.FC = () => {
     );
   }
 
-  const isFullScreenView = ['withdraw', 'my-jobs', 'community', 'notifications', 'invite', 'free-withdraw', 'jobs', 'upgrade', 'commercial', 'games'].includes(currentView);
+  const isFullScreenView = ['withdraw', 'deposit', 'my-jobs', 'community', 'notifications', 'invite', 'free-withdraw', 'jobs', 'upgrade', 'commercial', 'games'].includes(currentView);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col max-w-md mx-auto relative shadow-2xl overflow-x-hidden border-x border-white/5">
@@ -652,6 +653,7 @@ const App: React.FC = () => {
               target={user.dailyTarget} 
               currency={user.currency}
               onWithdraw={startWithdrawalFlow}
+              onDeposit={() => setCurrentView('deposit')}
             />
             <QuickActions onActionClick={handleQuickAction} />
             <PromoBanner />
@@ -661,6 +663,13 @@ const App: React.FC = () => {
               onViewAll={() => setCurrentView('history')}
             />
           </>
+        )}
+
+        {currentView === 'deposit' && user && (
+          <DepositPage 
+            onBack={() => setCurrentView('wallet')}
+            user={user}
+          />
         )}
 
         {currentView === 'withdraw' && user && (

@@ -18,6 +18,7 @@ export const GamesPage: React.FC<GamesPageProps> = ({ onBack, balance, currency,
   const [lastWin, setLastWin] = useState<number | null>(null);
   const [winMessage, setWinMessage] = useState<string>('');
   const [showLevelAlert, setShowLevelAlert] = useState<boolean>(false);
+  const [showMinerLevelAlert, setShowMinerLevelAlert] = useState<boolean>(false);
 
   // Energy regeneration simulation
   useEffect(() => {
@@ -85,6 +86,22 @@ export const GamesPage: React.FC<GamesPageProps> = ({ onBack, balance, currency,
             <p className="text-[9px] font-bold uppercase tracking-widest mt-1 text-white/80">Upgrade your account to unlock this arena!</p>
           </motion.div>
         )}
+
+        {showMinerLevelAlert && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-gradient-to-r from-red-600 via-pink-600 to-red-700 border-2 border-white p-4 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.5)] z-[999] text-white text-center"
+          >
+            <div className="flex items-center justify-center gap-2 mb-1.5">
+              <Lock size={18} className="animate-pulse text-yellow-300" />
+              <span className="font-black uppercase text-xs tracking-wider text-yellow-300">GAME ACCESS DENIED!</span>
+            </div>
+            <p className="font-black text-sm leading-tight">Gold Mine Catcher is only available for VIP Level 2 users and above.</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest mt-1 text-white/80">Upgrade your account to unlock this arena!</p>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Header */}
@@ -136,15 +153,26 @@ export const GamesPage: React.FC<GamesPageProps> = ({ onBack, balance, currency,
 
             {/* GAME 1 CARD: GOLD MINER */}
             <motion.div 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setActiveGame('miner')}
-              className="group cursor-pointer bg-gradient-to-br from-[#121c35] to-[#050b18] border border-yellow-500/20 rounded-[2.5rem] p-5 relative overflow-hidden shadow-2xl"
+              whileHover={userLevel >= 2 ? { scale: 1.02 } : { scale: 1 }}
+              whileTap={userLevel >= 2 ? { scale: 0.98 } : { scale: 1 }}
+              onClick={() => {
+                if (userLevel >= 2) {
+                  setActiveGame('miner');
+                } else {
+                  setShowMinerLevelAlert(true);
+                  setTimeout(() => setShowMinerLevelAlert(false), 3000);
+                }
+              }}
+              className={`group cursor-pointer bg-gradient-to-br from-[#121c35] to-[#050b18] border rounded-[2.5rem] p-5 relative overflow-hidden shadow-2xl transition-all duration-300 ${userLevel >= 2 ? 'border-yellow-500/20' : 'border-red-500/10 opacity-70'}`}
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl pointer-events-none"></div>
               <div className="flex gap-4">
                 <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center border-2 border-white/20 shadow-lg shadow-yellow-500/20 group-hover:rotate-6 transition-all duration-300 flex-shrink-0">
-                  <Flame size={28} className="text-black" />
+                  {userLevel >= 2 ? (
+                    <Flame size={28} className="text-black" />
+                  ) : (
+                    <Lock size={28} className="text-red-400" />
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5 mb-1">
@@ -152,6 +180,11 @@ export const GamesPage: React.FC<GamesPageProps> = ({ onBack, balance, currency,
                       Hot Game
                     </span>
                     <span className="text-[8px] text-gray-500 font-bold uppercase">1 Energy</span>
+                    {userLevel < 2 && (
+                      <span className="text-[8px] font-black bg-red-500/20 text-red-400 px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5">
+                        <Lock size={8} /> LEVEL 2+ ONLY
+                      </span>
+                    )}
                   </div>
                   <h4 className="text-sm font-black text-white uppercase tracking-wide">Gold Mine Catcher</h4>
                   <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
@@ -159,9 +192,15 @@ export const GamesPage: React.FC<GamesPageProps> = ({ onBack, balance, currency,
                   </p>
                   <div className="mt-3 flex items-center justify-between text-[10px] font-black">
                     <span className="text-yellow-400">EARN UP TO ₦15,000</span>
-                    <span className="text-white bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1">
-                      Play Now <Play size={8} fill="currentColor" />
-                    </span>
+                    {userLevel >= 2 ? (
+                      <span className="text-white bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1">
+                        Play Now <Play size={8} fill="currentColor" />
+                      </span>
+                    ) : (
+                      <span className="text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1">
+                        Locked <Lock size={8} />
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
