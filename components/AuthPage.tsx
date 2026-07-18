@@ -66,6 +66,26 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
           return;
         }
 
+        // Check device registration limit (maximum 3 accounts per device)
+        const deviceEmailsRaw = localStorage.getItem('volerapay_device_emails');
+        let deviceEmails: string[] = [];
+        if (deviceEmailsRaw) {
+          try {
+            deviceEmails = JSON.parse(deviceEmailsRaw);
+            if (!Array.isArray(deviceEmails)) {
+              deviceEmails = [];
+            }
+          } catch (e) {
+            deviceEmails = [];
+          }
+        }
+        const lowerEmail = formData.email.toLowerCase();
+        if (deviceEmails.length >= 3 && !deviceEmails.includes(lowerEmail)) {
+          setError('Device limit reached: You cannot create more than 3 accounts on this device');
+          setIsLoading(false);
+          return;
+        }
+
         // Check if username is unique
         const users = await authService.getUsers();
         if (users.some(u => u.username?.toLowerCase() === formData.username.toLowerCase())) {
@@ -91,6 +111,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
 
         await authService.register(newUser);
         localStorage.setItem('volerapay_just_registered', 'true');
+
+        // Record the registration on this device
+        if (!deviceEmails.includes(lowerEmail)) {
+          deviceEmails.push(lowerEmail);
+          localStorage.setItem('volerapay_device_emails', JSON.stringify(deviceEmails));
+        }
 
         // Apply referral code if provided
         if (formData.referralCode) {
