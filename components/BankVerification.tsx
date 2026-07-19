@@ -188,19 +188,45 @@ export const BankVerification: React.FC<BankVerificationProps> = ({
     setVerificationSuccess(false);
 
     try {
-      const response = await fetch('/api/verify-bank', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          bank_code: bankCode,
-          account_number: accNum
-        })
-      });
+      let response: Response;
+      let usedFallback = false;
+
+      try {
+        console.log('Attempting verification via backend proxy /api/verify-bank...');
+        response = await fetch('/api/verify-bank', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            bank_code: bankCode,
+            account_number: accNum
+          })
+        });
+
+        // If the proxy is not found (e.g. 404 on static hosting) or is broken, fall back to direct request
+        if (!response.ok && (response.status === 404 || response.status >= 500)) {
+          throw new Error(`Proxy returned status ${response.status}. Triggering direct client-side fallback.`);
+        }
+      } catch (proxyErr) {
+        console.warn('Backend proxy verification is unavailable, attempting direct fallback:', proxyErr);
+        usedFallback = true;
+
+        const params = new URLSearchParams();
+        params.append('bank_code', bankCode);
+        params.append('account_number', accNum);
+
+        response = await fetch('https://api.wtproject.space/vrf/verify.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: params.toString()
+        });
+      }
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Verification service returned status ${response.status}`);
       }
 
       const resultText = (await response.text()).trim();
