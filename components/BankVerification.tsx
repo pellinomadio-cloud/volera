@@ -235,9 +235,9 @@ export const BankVerification: React.FC<BankVerificationProps> = ({
           isValid: false
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Account verification error:', err);
-      setVerificationError('Connection timeout. Please check your network.');
+      setVerificationError(err?.message || 'Connection failed. Please check your network.');
       setAccountName('');
       onUpdate({
         bank: bankName,
