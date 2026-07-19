@@ -46,6 +46,7 @@ const UPGRADE_TIERS: UpgradeTier[] = [
     borderColor: 'border-amber-600/30',
     glowColor: 'rgba(245,158,11,0.15)',
     benefits: [
+      'Standard withdrawals unlocked (Min. ₦100,000)',
       'Access to Tier-2 Verified Jobs',
       'Daily target limit: ₦15,000',
       'Earn +15% more per completed task',

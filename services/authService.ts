@@ -397,7 +397,7 @@ export const authService = {
       // If approved, update user's level
       if (status === 'approved') {
         const updates: Record<string, any> = { level: requestedLevel };
-        if (requestedLevel === 3) {
+        if (requestedLevel === 2 || requestedLevel === 3) {
           updates.processingMode = true;
         }
         await authService.updateUserByAdmin(email, updates);
@@ -415,7 +415,7 @@ export const authService = {
         localStorage.setItem('volerapay_upgrade_requests', JSON.stringify(requests));
         if (status === 'approved') {
           const updates: Record<string, any> = { level: requestedLevel };
-          if (requestedLevel === 3) {
+          if (requestedLevel === 2 || requestedLevel === 3) {
             updates.processingMode = true;
           }
           await authService.updateUserByAdmin(email, updates);
