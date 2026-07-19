@@ -7,15 +7,46 @@ export interface BankItem {
 }
 
 export const BANK_LIST: BankItem[] = [
+  // Popular/Major Banks First for Convenience
   { name: 'Access Bank', code: '044' },
   { name: 'Zenith Bank', code: '057' },
-  { name: 'GTBank', code: '058' },
-  { name: 'First Bank', code: '011' },
+  { name: 'Guaranty Trust Bank (GTBank)', code: '058' },
+  { name: 'First Bank of Nigeria', code: '011' },
   { name: 'United Bank for Africa (UBA)', code: '033' },
-  { name: 'Kuda Bank', code: '50211' },
-  { name: 'Moniepoint', code: '50515' },
-  { name: 'OPay', code: '999992' },
-  { name: 'PalmPay', code: '999991' }
+  { name: 'OPay', code: '100004' },
+  { name: 'PalmPay', code: '100033' },
+  { name: 'Kuda Bank', code: '090267' },
+  { name: 'Moniepoint MFB', code: '090405' },
+  
+  // Commercial Banks
+  { name: 'EcoBank', code: '050' },
+  { name: 'Fidelity Bank', code: '070' },
+  { name: 'Keystone Bank', code: '183' },
+  { name: 'Polaris Bank', code: '076' },
+  { name: 'Union Bank of Nigeria', code: '032' },
+  { name: 'Wema Bank', code: '035' },
+  { name: 'Citi Bank', code: '023' },
+  { name: 'Globus Bank', code: '000027' },
+  { name: 'Titan Trust Bank', code: '000025' },
+  { name: 'Lotus Bank', code: '000029' },
+  { name: 'PremiumTrust Bank', code: '000031' },
+  { name: 'Optimus Bank', code: '000036' },
+  { name: 'Signature Bank', code: '000034' },
+  { name: 'Alternative Bank', code: '000037' },
+  { name: 'Enterprise Bank', code: '000019' },
+
+  // Microfinance & Digital Providers
+  { name: 'VFD Micro Finance Bank', code: '090110' },
+  { name: 'Sparkle', code: '090325' },
+  { name: 'Eyowo MFB', code: '090328' },
+  { name: 'Rubies Microfinance Bank', code: '090175' },
+  { name: 'NPF Microfinance Bank', code: '071001' },
+  { name: 'Page Financials', code: '070008' },
+  { name: 'Safe Haven MFB', code: '090286' },
+  { name: 'Tangerine Bank', code: '090426' },
+  { name: 'Mint-Finex MFB', code: '090281' },
+  { name: 'Dot Microfinance Bank', code: '090470' },
+  { name: 'Kolomoni MFB', code: '090480' }
 ];
 
 interface BankVerificationProps {
@@ -34,9 +65,14 @@ export const BankVerification: React.FC<BankVerificationProps> = ({
   initialAccountName = ''
 }) => {
   const [accountNumber, setAccountNumber] = useState(initialAccountNumber);
-  const [selectedBank, setSelectedBank] = useState<BankItem | null>(
-    BANK_LIST.find((b) => b.name === initialBank) || null
-  );
+  const [selectedBank, setSelectedBank] = useState<BankItem | null>(() => {
+    if (!initialBank) return null;
+    return BANK_LIST.find((b) => 
+      b.name.toLowerCase() === initialBank.toLowerCase() ||
+      b.name.toLowerCase().includes(initialBank.toLowerCase()) ||
+      initialBank.toLowerCase().includes(b.name.toLowerCase())
+    ) || null;
+  });
   const [accountName, setAccountName] = useState(initialAccountName);
 
   // Searchable dropdown state
