@@ -3,6 +3,7 @@ import { ArrowLeft, Landmark, Copy, CheckCircle2, Clock, UploadCloud, AlertCircl
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 import { authService } from '../services/authService';
+import { compressImage } from '../services/imageCompression';
 
 interface DepositPageProps {
   onBack: () => void;
@@ -28,6 +29,7 @@ export const DepositPage: React.FC<DepositPageProps> = ({ onBack, user }) => {
   // Proof state
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofBase64, setProofBase64] = useState<string>('');
+  const [compressing, setCompressing] = useState(false);
   const [activePendingRequest, setActivePendingRequest] = useState<any | null>(null);
   const [loadingPendingCheck, setLoadingPendingCheck] = useState(true);
 
@@ -71,16 +73,28 @@ export const DepositPage: React.FC<DepositPageProps> = ({ onBack, user }) => {
     setTimeout(() => setCopiedText(false), 2000);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setProofFile(file);
+      setCompressing(true);
+      setErrorMessage(null);
       
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProofBase64(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        console.log(`Compressing receipt: ${file.name} (${Math.round(file.size / 1024)} KB)`);
+        const compressedBase64 = await compressImage(file);
+        setProofBase64(compressedBase64);
+        console.log("Receipt compressed successfully");
+      } catch (err: any) {
+        console.warn("Client image compression failed, falling back to original FileReader:", err);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setProofBase64(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } finally {
+        setCompressing(false);
+      }
     }
   };
 
@@ -308,9 +322,18 @@ export const DepositPage: React.FC<DepositPageProps> = ({ onBack, user }) => {
               />
               <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
                 <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                  <UploadCloud size={20} />
+                  {compressing ? (
+                    <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <UploadCloud size={20} />
+                  )}
                 </div>
-                {proofFile ? (
+                {compressing ? (
+                  <div>
+                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider animate-pulse">OPTIMIZING SCREENSHOT...</p>
+                    <p className="text-[8px] text-gray-500 uppercase font-bold">Reducing file size for instant database sync</p>
+                  </div>
+                ) : proofFile ? (
                   <div>
                     <p className="text-[10px] font-black text-green-400 uppercase tracking-wider">{proofFile.name}</p>
                     <p className="text-[8px] text-gray-500 uppercase font-bold">Click or drag to replace screenshot</p>
@@ -345,11 +368,19 @@ export const DepositPage: React.FC<DepositPageProps> = ({ onBack, user }) => {
 
           <button
             onClick={handleSubmitProof}
-            disabled={submitting}
+            disabled={submitting || compressing}
             className="w-full py-4 rounded-[1.6rem] bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:brightness-110 disabled:brightness-75 text-white font-black text-[11px] uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all border border-blue-400/25 flex items-center justify-center gap-2"
           >
             {submitting ? (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>SUBMITTING PROOF...</span>
+              </>
+            ) : compressing ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>OPTIMIZING RECEIPT...</span>
+              </>
             ) : (
               'Submit Deposit Proof'
             )}

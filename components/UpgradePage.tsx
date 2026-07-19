@@ -3,6 +3,7 @@ import { ArrowLeft, Check, Sparkles, ShieldAlert, Award, Star, Zap, Cpu, Crown, 
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 import { authService } from '../services/authService';
+import { compressImage } from '../services/imageCompression';
 
 interface UpgradePageProps {
   onBack: () => void;
@@ -123,6 +124,7 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
   // Proof upload & pending state variables
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofBase64, setProofBase64] = useState<string>('');
+  const [compressing, setCompressing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activePendingRequest, setActivePendingRequest] = useState<any | null>(null);
   const [loadingPendingCheck, setLoadingPendingCheck] = useState(true);
@@ -171,16 +173,28 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
     setTimeout(() => setCopiedText(false), 2000);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setProofFile(file);
+      setCompressing(true);
+      setErrorMessage(null);
       
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProofBase64(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        console.log(`Compressing upgrade receipt: ${file.name} (${Math.round(file.size / 1024)} KB)`);
+        const compressedBase64 = await compressImage(file);
+        setProofBase64(compressedBase64);
+        console.log("Upgrade receipt compressed successfully");
+      } catch (err: any) {
+        console.warn("Client upgrade image compression failed, falling back to original FileReader:", err);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setProofBase64(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } finally {
+        setCompressing(false);
+      }
     }
   };
 
@@ -423,15 +437,25 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
           </p>
 
           <div className="space-y-3">
-            <label className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-5 hover:bg-white/[0.02] cursor-pointer transition-all">
+            <label className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-5 hover:bg-white/[0.02] cursor-pointer transition-all relative">
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="hidden"
+                className="absolute opacity-0 w-px h-px pointer-events-none"
               />
               <div className="text-center">
-                {proofFile ? (
+                {compressing ? (
+                  <div className="space-y-2">
+                    <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <span className="text-[10px] font-black text-amber-400 block animate-pulse">
+                      OPTIMIZING SCREENSHOT...
+                    </span>
+                    <span className="text-[8px] text-gray-500 block uppercase font-bold">
+                      Reducing file size for instant database sync
+                    </span>
+                  </div>
+                ) : proofFile ? (
                   <div className="space-y-2">
                     <CheckCircle size={24} className="mx-auto text-emerald-400" />
                     <span className="text-[10px] font-black text-emerald-400 block truncate max-w-[240px]">
@@ -472,15 +496,20 @@ const UpgradePage: React.FC<UpgradePageProps> = ({ onBack, user, onUpgradeSucces
 
         {/* Action Button Section */}
         <div className="space-y-3 mb-24">
-          <button
-            disabled={verifyingPayment}
+           <button
+            disabled={verifyingPayment || compressing}
             onClick={handleConfirmTransfer}
-            className="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:brightness-110 text-black py-4 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-amber-500/10 flex items-center justify-center gap-2 transition-all border border-amber-300/30"
+            className="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:brightness-110 disabled:brightness-75 text-black py-4 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-amber-500/10 flex items-center justify-center gap-2 transition-all border border-amber-300/30"
           >
             {verifyingPayment ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                 SUBMITTING TO CONSENSUS...
+              </>
+            ) : compressing ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                OPTIMIZING RECEIPT...
               </>
             ) : (
               'I HAVE MADE THE TRANSFER'
