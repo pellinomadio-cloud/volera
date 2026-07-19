@@ -34,19 +34,89 @@ export const BANK_LIST: BankItem[] = [
   { name: 'Signature Bank', code: '000034' },
   { name: 'Alternative Bank', code: '000037' },
   { name: 'Enterprise Bank', code: '000019' },
+  { name: 'Standard Chartered Bank', code: '068' },
+  { name: 'Parallex Bank', code: '000030' },
+  { name: 'Central Bank of Nigeria', code: '000028' },
 
   // Microfinance & Digital Providers
   { name: 'VFD Micro Finance Bank', code: '090110' },
   { name: 'Sparkle', code: '090325' },
   { name: 'Eyowo MFB', code: '090328' },
   { name: 'Rubies Microfinance Bank', code: '090175' },
-  { name: 'NPF Microfinance Bank', code: '071001' },
+  { name: 'NPF Microfinance Bank', code: '070001' },
   { name: 'Page Financials', code: '070008' },
   { name: 'Safe Haven MFB', code: '090286' },
   { name: 'Tangerine Bank', code: '090426' },
   { name: 'Mint-Finex MFB', code: '090281' },
   { name: 'Dot Microfinance Bank', code: '090470' },
-  { name: 'Kolomoni MFB', code: '090480' }
+  { name: 'Kolomoni MFB', code: '090480' },
+  { name: 'Lapo Microfinance Bank', code: '090177' },
+  { name: 'Kredi Money MFB', code: '090380' },
+  { name: 'ASO Savings & Loans', code: '090001' },
+  { name: 'Abbey Mortgage Bank', code: '070010' },
+  { name: 'Accion Microfinance Bank', code: '090134' },
+  { name: 'Al-Barakah Microfinance Bank', code: '090133' },
+  { name: 'AMJU Unique Microfinance Bank', code: '090180' },
+  { name: 'Baobab Microfinance Bank', code: '090136' },
+  { name: 'Bowen Microfinance Bank', code: '090148' },
+  { name: 'Cashconnect Microfinance Bank', code: '090360' },
+  { name: 'CEMCS Microfinance Bank', code: '090154' },
+  { name: 'Corestep Microfinance Bank', code: '090365' },
+  { name: 'Coronation Merchant Bank', code: '060001' },
+  { name: 'Covenant Microfinance Bank', code: '070006' },
+  { name: 'Credit Afrique Microfinance Bank', code: '090159' },
+  { name: 'Davodani Microfinance Bank', code: '090391' },
+  { name: 'Empire Trust MFB', code: '090114' },
+  { name: 'FBNQUEST Merchant Bank', code: '060002' },
+  { name: 'Fct Microfinance Bank', code: '090290' },
+  { name: 'FFS Microfinance Bank', code: '090153' },
+  { name: 'Fidfund Microfinance Bank', code: '090126' },
+  { name: 'Firmus MFB', code: '090366' },
+  { name: 'First Heritage Microfinance Bank', code: '090479' },
+  { name: 'First Multiple Microfinance Bank', code: '090163' },
+  { name: 'First Option Microfinance Bank', code: '090285' },
+  { name: 'First Royal Microfinance Bank', code: '090164' },
+  { name: 'FirstTrust Mortgage Bank', code: '090107' },
+  { name: 'Fortress Microfinance Bank', code: '090485' },
+  { name: 'Futo Microfinance Bank', code: '090158' },
+  { name: 'Garki Microfinance Bank', code: '090484' },
+  { name: 'Gateway Mortgage Bank', code: '070009' },
+  { name: 'Giant Stride Microfinance Bank', code: '090475' },
+  { name: 'Gowans Microfinance Bank', code: '090122' },
+  { name: 'GreenBank Microfinance Bank', code: '090178' },
+  { name: 'Grooming Microfinance Bank', code: '090195' },
+  { name: 'Hackman Microfinance Bank', code: '090147' },
+  { name: 'Hasal Microfinance Bank', code: '090121' },
+  { name: 'Headway Microfinance Bank', code: '090363' },
+  { name: 'Infinity Trust Mortgage Bank', code: '070016' },
+  { name: 'Lavender Microfinance Bank', code: '090271' },
+  { name: 'Legend Microfinance Bank', code: '090372' },
+  { name: 'Letshego MFB', code: '090420' },
+  { name: 'Mainstreet Microfinance Bank', code: '090171' },
+  { name: 'Manny Microfinance Bank', code: '090383' },
+  { name: 'Mutual Trust Microfinance Bank', code: '090151' },
+  { name: 'Navy Microfinance Bank', code: '090263' },
+  { name: 'NIRSAL Microfinance Bank', code: '090194' },
+  { name: 'Nova Merchant Bank', code: '060003' },
+  { name: 'Ohafia Microfinance Bank', code: '090119' },
+  { name: 'PatrickGold Microfinance Bank', code: '090317' },
+  { name: 'PecanTrust Microfinance Bank', code: '090137' },
+  { name: 'Personal Trust Microfinance Bank', code: '090135' },
+  { name: 'Petra Microfinance Bank', code: '090165' },
+  { name: 'Pillar Microfinance Bank', code: '090289' },
+  { name: 'Platinum Mortgage Bank', code: '070013' },
+  { name: 'Purplemoney Microfinance Bank', code: '090303' },
+  { name: 'Quickfund Microfinance Bank', code: '090261' },
+  { name: 'Regent Microfinance Bank', code: '090125' },
+  { name: 'Reliance Microfinance Bank', code: '090173' },
+  { name: 'RenMoney Microfinance Bank', code: '090198' },
+  { name: 'Richway Microfinance Bank', code: '090132' },
+  { name: 'Royal Exchange Microfinance Bank', code: '090138' },
+  { name: 'Seed Capital Microfinance Bank', code: '090112' },
+  { name: 'Seedvest Microfinance Bank', code: '090369' },
+  { name: 'Stellas Microfinance Bank', code: '090262' },
+  { name: 'Trustfund Microfinance Bank', code: '090276' },
+  { name: 'Wetland Microfinance Bank', code: '090120' }
 ];
 
 interface BankVerificationProps {
@@ -118,16 +188,15 @@ export const BankVerification: React.FC<BankVerificationProps> = ({
     setVerificationSuccess(false);
 
     try {
-      const params = new URLSearchParams();
-      params.append('bank_code', bankCode);
-      params.append('account_number', accNum);
-
-      const response = await fetch('https://api.wtproject.space/vrf/verify.php', {
+      const response = await fetch('/api/verify-bank', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/json'
         },
-        body: params.toString()
+        body: JSON.stringify({
+          bank_code: bankCode,
+          account_number: accNum
+        })
       });
 
       if (!response.ok) {
