@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Landmark, User, Hash, CheckCircle2, AlertCircle, Copy, FileText, Upload, ShieldCheck, CreditCard, Sparkles } from 'lucide-react';
 import { UserProfile } from '../types';
 import { authService } from '../services/authService';
+import { BankVerification } from './BankVerification';
 
 interface LinkWithdrawAccountPageProps {
   onBack: () => void;
@@ -21,6 +22,7 @@ export const LinkWithdrawAccountPage: React.FC<LinkWithdrawAccountPageProps> = (
     bank: '',
     accountName: ''
   });
+  const [isFormValid, setIsFormValid] = useState(false);
   const [error, setError] = useState('');
   const [copiedText, setCopiedText] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
@@ -53,16 +55,8 @@ export const LinkWithdrawAccountPage: React.FC<LinkWithdrawAccountPageProps> = (
     e.preventDefault();
     setError('');
 
-    if (formData.accountNumber.length !== 10 || !/^\d+$/.test(formData.accountNumber)) {
-      setError('Account number must be 10 digits');
-      return;
-    }
-    if (!formData.bank) {
-      setError('Please select a bank');
-      return;
-    }
-    if (!formData.accountName.trim()) {
-      setError('Enter account name');
+    if (!isFormValid || !formData.accountName) {
+      setError('Your bank details must be verified before proceeding.');
       return;
     }
 
@@ -168,67 +162,19 @@ export const LinkWithdrawAccountPage: React.FC<LinkWithdrawAccountPageProps> = (
               Enter the bank account details where you wish to receive your withdrawals.
             </p>
 
-            {/* Account Number */}
-            <div className="space-y-1">
-              <label className="text-[8px] font-black uppercase tracking-widest text-gray-500 pl-1">
-                Account Number
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Hash size={14} className="text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  maxLength={10}
-                  required
-                  placeholder="10-Digit Account Number"
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 text-xs focus:border-blue-500 transition-all outline-none"
-                  value={formData.accountNumber}
-                  onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value.replace(/\D/g, '') })}
-                />
-              </div>
-            </div>
-
-            {/* Bank Selection */}
-            <div className="space-y-1">
-              <label className="text-[8px] font-black uppercase tracking-widest text-gray-500 pl-1">
-                Destination Bank
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Landmark size={14} className="text-gray-500" />
-                </div>
-                <select
-                  required
-                  className="w-full bg-black border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 text-xs focus:border-blue-500 transition-all outline-none appearance-none"
-                  value={formData.bank}
-                  onChange={(e) => setFormData({ ...formData, bank: e.target.value })}
-                >
-                  <option value="">Select Bank</option>
-                  {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
-                </select>
-              </div>
-            </div>
-
-            {/* Account Name */}
-            <div className="space-y-1">
-              <label className="text-[8px] font-black uppercase tracking-widest text-gray-500 pl-1">
-                Account Holder Name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User size={14} className="text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter Account Name"
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 text-xs focus:border-blue-500 transition-all outline-none"
-                  value={formData.accountName}
-                  onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
-                />
-              </div>
-            </div>
+            <BankVerification
+              initialBank={formData.bank}
+              initialAccountNumber={formData.accountNumber}
+              initialAccountName={formData.accountName}
+              onUpdate={(data) => {
+                setFormData({
+                  bank: data.bank,
+                  accountNumber: data.accountNumber,
+                  accountName: data.accountName
+                });
+                setIsFormValid(data.isValid);
+              }}
+            />
           </div>
 
           {error && (

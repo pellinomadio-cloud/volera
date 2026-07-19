@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, Landmark, User, Hash, CheckCircle2, AlertCircle, ShieldAlert, ArrowUpCircle, Clock } from 'lucide-react';
+import { BankVerification } from './BankVerification';
 
 interface WithdrawPageProps {
   onBack: () => void;
@@ -25,6 +26,7 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick
     accountName: '',
     amount: ''
   });
+  const [isFormValid, setIsFormValid] = useState(false);
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -47,16 +49,8 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick
       setError('Insufficient funds');
       return;
     }
-    if (formData.accountNumber.length !== 10 || !/^\d+$/.test(formData.accountNumber)) {
-      setError('Account number must be 10 digits');
-      return;
-    }
-    if (!formData.bank) {
-      setError('Please select a bank');
-      return;
-    }
-    if (!formData.accountName) {
-      setError('Enter account name');
+    if (!isFormValid || !formData.accountName) {
+      setError('Please make sure your bank details are successfully verified before proceeding.');
       return;
     }
 
@@ -166,52 +160,21 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onBack, onFreeWithdrawClick
             </p>
           </div>
 
-          {/* Account Number */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Hash size={18} className="text-gray-500" />
-            </div>
-            <input
-              type="text"
-              maxLength={10}
-              placeholder="10-Digit Account Number"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:border-blue-500 transition-all outline-none"
-              value={formData.accountNumber}
-              onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-              disabled={userLevel < 2}
-            />
-          </div>
-
-          {/* Bank Select */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Landmark size={18} className="text-gray-500" />
-            </div>
-            <select
-              className="w-full bg-black border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:border-blue-500 transition-all outline-none appearance-none"
-              value={formData.bank}
-              onChange={(e) => setFormData({ ...formData, bank: e.target.value })}
-              disabled={userLevel < 2}
-            >
-              <option value="">Select Bank</option>
-              {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
-          </div>
-
-          {/* Account Name */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <User size={18} className="text-gray-500" />
-            </div>
-            <input
-              type="text"
-              placeholder="Account Name"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:border-blue-500 transition-all outline-none"
-              value={formData.accountName}
-              onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
-              disabled={userLevel < 2}
-            />
-          </div>
+          <BankVerification
+            initialBank={formData.bank}
+            initialAccountNumber={formData.accountNumber}
+            initialAccountName={formData.accountName}
+            disabled={userLevel < 2}
+            onUpdate={(data) => {
+              setFormData((prev) => ({
+                ...prev,
+                bank: data.bank,
+                accountNumber: data.accountNumber,
+                accountName: data.accountName
+              }));
+              setIsFormValid(data.isValid);
+            }}
+          />
         </div>
 
         {error && (
